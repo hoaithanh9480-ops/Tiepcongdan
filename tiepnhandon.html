@@ -210,6 +210,10 @@ button:hover{
     color:#991b1b;
 }
 
+.tra-loi-textbox{
+    margin-top:10px;
+}
+
 @media(max-width:768px){
 
     .mini-row{
@@ -393,6 +397,26 @@ window.toggleInput = function(checkId,textboxId){
 
 }
 
+window.toggleTraLoi = function(){
+
+    const traLoiValue = document.getElementById("traLoi").value;
+
+    const textboxDiv = document.getElementById("traLoiTextboxDiv");
+
+    if(traLoiValue === "Văn bản"){
+
+        textboxDiv.classList.remove("hidden");
+
+    }else{
+
+        textboxDiv.classList.add("hidden");
+
+        document.getElementById("traLoiText").value = "";
+
+    }
+
+}
+
 window.saveData = async function(){
 
     try{
@@ -448,6 +472,9 @@ window.saveData = async function(){
 
             traLoi:
             document.getElementById("traLoi").value,
+
+            traLoiText:
+            document.getElementById("traLoiText").value,
 
             thuLy:
             document.getElementById("chkThuLy").checked,
@@ -685,12 +712,20 @@ id="chucVu">
 
 <label>Trả lời</label>
 
-<select id="traLoi">
+<select id="traLoi" onchange="toggleTraLoi()">
 
 <option>Trực tiếp</option>
 <option>Văn bản</option>
 
 </select>
+
+<div id="traLoiTextboxDiv" class="tra-loi-textbox hidden">
+
+<label style="margin-top:5px;">Nội dung trả lời bằng văn bản</label>
+
+<textarea id="traLoiText" rows="3" placeholder="Nhập nội dung trả lời..."></textarea>
+
+</div>
 
 </div>
 
