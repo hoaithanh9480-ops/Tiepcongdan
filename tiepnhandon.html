@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sổ tiếp nhận đơn</title>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    get
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
+    authDomain: "chamcong-9385e.firebaseapp.com",
+    databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "chamcong-9385e",
+    storageBucket: "chamcong-9385e.firebasestorage.app",
+    messagingSenderId: "416187735141",
+    appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async(user) => {
+
+    if(user){
+
+        currentUser = user;
+
+        const counterRef = ref(db, `counter/${user.uid}`);
+
+        const snapshot = await get(counterRef);
+
+        let nextId = 1;
+
+        if(snapshot.exists()){
+            nextId = snapshot.val() + 1;
+        }
+
+        document.getElementById("id").value = nextId;
+
+    }else{
+        window.location.href = "index.html";
+    }
+
+});
+
+window.saveData = async function(){
+
+    if(!currentUser){
+        alert("Chưa đăng nhập");
+        return;
+    }
+
+    const id = document.getElementById("id").value;
+
+    const data = {
+        id: id,
+        nam: document.getElementById("nam").value,
+        ngayNhan: document.getElementById("ngayNhan").value,
+        hoTen: document.getElementById("hoTen").value,
+        cmnd: document.getElementById("cmnd").value,
+        noiDung: document.getElementById("noiDung").value,
+        ghiChu: document.getElementById("ghiChu").value,
+        createdAt: new Date().toISOString()
+    };
+
+    await set(
+        ref(db, `tiepnhandon/${currentUser.uid}/${id}`),
+        data
+    );
+
+    await set(
+        ref(db, `counter/${currentUser.uid}`),
+        parseInt(id)
+    );
+
+    alert("Lưu thành công");
+}
+
+</script>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Tahoma;
+    background:#8b3f00;
+    color:white;
+}
+
+.header{
+    background:yellow;
+    color:red;
+    text-align:center;
+    font-size:40px;
+    font-weight:bold;
+    padding:10px;
+}
+
+.container{
+    padding:20px;
+}
+
+.row{
+    display:flex;
+    margin-bottom:10px;
+    gap:10px;
+}
+
+label{
+    width:150px;
+    font-weight:bold;
+}
+
+input, textarea{
+    flex:1;
+    padding:8px;
+    border:none;
+}
+
+textarea{
+    height:100px;
+}
+
+button{
+    background:#2b6de0;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    margin-right:10px;
+    cursor:pointer;
+    font-weight:bold;
+    border-radius:5px;
+}
+
+button:hover{
+    background:#1f4fa5;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+SỔ TIẾP NHẬN ĐƠN
+</div>
+
+<div class="container">
+
+<div class="row">
+<label>ID</label>
+<input type="text" id="id" readonly>
+</div>
+
+<div class="row">
+<label>Năm</label>
+<input type="text" id="nam">
+
+<label>Ngày nhận đơn</label>
+<input type="date" id="ngayNhan">
+</div>
+
+<div class="row">
+<label>Họ và tên</label>
+<input type="text" id="hoTen">
+
+<label>Số CMND/CCCD</label>
+<input type="text" id="cmnd">
+</div>
+
+<div class="row">
+<label>Nội dung khiếu nại</label>
+<textarea id="noiDung"></textarea>
+</div>
+
+<div class="row">
+<label>Ghi chú</label>
+<textarea id="ghiChu"></textarea>
+</div>
+
+<div class="row">
+
+<button onclick="saveData()">LƯU</button>
+
+<button onclick="window.location.href='dashboard.html'">
+ĐÓNG
+</button>
+
+</div>
+
+</div>
+
+</body>
+</html>
