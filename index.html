@@ -1,560 +1,688 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Đăng nhập & Đăng ký - Hệ thống xác thực Firebase</title>
-    <!-- Google Fonts & Simple CSS Reset -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <!-- Firebase SDKs (v9 modular style nhưng dùng compatibility cho nhanh, nhưng vẫn dùng v9+ để dễ) -->
-    <script type="module">
-        // Import Firebase modules (modular SDK v9+)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, update, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // Cấu hình Firebase của bạn
-        const firebaseConfig = {
-            apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
-            authDomain: "chamcong-9385e.firebaseapp.com",
-            databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "chamcong-9385e",
-            storageBucket: "chamcong-9385e.firebasestorage.app",
-            messagingSenderId: "416187735141",
-            appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
-        };
-
-        // Khởi tạo Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const database = getDatabase(app);
-
-        // DOM elements
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const showRegisterLink = document.getElementById('show-register');
-        const showLoginLink = document.getElementById('show-login');
-        const loginContainer = document.getElementById('login-container');
-        const registerContainer = document.getElementById('register-container');
-        const userDashboard = document.getElementById('user-dashboard');
-        const dashboardUserEmail = document.getElementById('dashboard-user-email');
-        const dashboardUserId = document.getElementById('dashboard-user-id');
-        const userInfoFromDb = document.getElementById('user-info-from-db');
-        const logoutBtn = document.getElementById('logout-btn');
-        
-        // Thông báo
-        const loginMessage = document.getElementById('login-message');
-        const registerMessage = document.getElementById('register-message');
-        const dashboardMessage = document.getElementById('dashboard-message');
-
-        // Helper hiển thị thông báo
-        function showMessage(element, text, isError = true) {
-            element.textContent = text;
-            element.style.color = isError ? '#dc2626' : '#16a34a';
-            element.style.display = 'block';
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 4000);
-        }
-
-        // Hàm lưu thông tin người dùng vào Realtime Database theo UID
-        // Khi đăng ký: lưu email, fullName (nếu có), createdAt
-        async function saveUserToDatabase(userId, email, fullName = '') {
-            try {
-                const userRef = ref(database, `users/${userId}`);
-                // Kiểm tra nếu chưa tồn tại thì tạo mới, nếu tồn tại thì cập nhật thêm trường (tránh ghi đè)
-                const snapshot = await get(userRef);
-                const userData = {
-                    email: email,
-                    fullName: fullName || email.split('@')[0],
-                    lastLogin: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                if (!snapshot.exists()) {
-                    // Lần đầu tạo tài khoản: thêm createdAt
-                    userData.createdAt = new Date().toISOString();
-                    await set(userRef, userData);
-                } else {
-                    // Cập nhật lastLogin và updatedAt
-                    await update(userRef, {
-                        lastLogin: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    });
-                }
-                console.log('Lưu / cập nhật dữ liệu user thành công');
-                return true;
-            } catch (error) {
-                console.error("Lỗi lưu database:", error);
-                return false;
-            }
-        }
-
-        // Lấy thông tin user từ DB để hiển thị
-        async function loadUserProfile(user) {
-            if (!user) return;
-            try {
-                const userRef = ref(database, `users/${user.uid}`);
-                const snapshot = await get(userRef);
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    userInfoFromDb.innerHTML = `
-                        <strong>📇 Hồ sơ từ Database:</strong><br>
-                        👤 Tên: ${data.fullName || 'Chưa cập nhật'}<br>
-                        📧 Email: ${data.email}<br>
-                        🕒 Tạo tài khoản: ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}<br>
-                        🔄 Lần đăng nhập gần nhất: ${data.lastLogin ? new Date(data.lastLogin).toLocaleString() : 'N/A'}
-                    `;
-                } else {
-                    userInfoFromDb.innerHTML = `⚠️ Chưa có dữ liệu bổ sung. Hãy cập nhật hồ sơ.`;
-                    // Nếu chưa có, tạo mới để đồng bộ
-                    await saveUserToDatabase(user.uid, user.email, user.displayName || '');
-                }
-            } catch (err) {
-                console.error(err);
-                userInfoFromDb.innerHTML = `Lỗi tải dữ liệu: ${err.message}`;
-            }
-        }
-
-        // Cập nhật giao diện khi đăng nhập thành công
-        async function onLoginSuccess(user) {
-            // Lưu thông tin đăng nhập, cập nhật lastLogin
-            await saveUserToDatabase(user.uid, user.email);
-            await loadUserProfile(user);
-            dashboardUserEmail.textContent = user.email;
-            dashboardUserId.textContent = user.uid;
-            // Ẩn form đăng nhập/đăng ký, hiện dashboard
-            loginContainer.style.display = 'none';
-            registerContainer.style.display = 'none';
-            userDashboard.style.display = 'block';
-            showMessage(dashboardMessage, `✅ Đăng nhập thành công! Chào ${user.email}`, false);
-        }
-
-        // Đăng xuất
-        async function handleLogout() {
-            try {
-                await signOut(auth);
-                // Reset giao diện
-                loginContainer.style.display = 'block';
-                registerContainer.style.display = 'none';
-                userDashboard.style.display = 'none';
-                // Xóa nội dung form
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-password').value = '';
-                document.getElementById('register-email').value = '';
-                document.getElementById('register-password').value = '';
-                document.getElementById('register-fullname').value = '';
-                showMessage(loginMessage, '👋 Bạn đã đăng xuất.', false);
-            } catch (error) {
-                console.error("Lỗi đăng xuất:", error);
-                showMessage(dashboardMessage, `Lỗi: ${error.message}`, true);
-            }
-        }
-
-        // Xử lý đăng ký tài khoản mới (có lưu thêm fullname vào database)
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('register-email').value.trim();
-            const password = document.getElementById('register-password').value;
-            const fullName = document.getElementById('register-fullname').value.trim();
-
-            if (password.length < 6) {
-                showMessage(registerMessage, 'Mật khẩu phải có ít nhất 6 ký tự.', true);
-                return;
-            }
-
-            try {
-                // Tạo user với email/password
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                // Lưu thêm fullName vào Realtime Database theo UID
-                const userRef = ref(database, `users/${user.uid}`);
-                await set(userRef, {
-                    email: email,
-                    fullName: fullName || email.split('@')[0],
-                    createdAt: new Date().toISOString(),
-                    lastLogin: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                });
-                showMessage(registerMessage, '🎉 Đăng ký thành công! Đang chuyển hướng...', false);
-                // Reset form register
-                registerForm.reset();
-                // Sau đăng ký, tự động chuyển sang dashboard (vì onAuthStateChanged sẽ kích hoạt)
-                // nhưng cần đảm bảo giao diện cập nhật
-            } catch (error) {
-                let errorMsg = error.message;
-                if (error.code === 'auth/email-already-in-use') errorMsg = 'Email đã được sử dụng. Vui lòng đăng nhập.';
-                else if (error.code === 'auth/invalid-email') errorMsg = 'Email không hợp lệ.';
-                else if (error.code === 'auth/weak-password') errorMsg = 'Mật khẩu quá yếu.';
-                showMessage(registerMessage, `❌ ${errorMsg}`, true);
-            }
-        });
-
-        // Xử lý đăng nhập
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-
-            if (!email || !password) {
-                showMessage(loginMessage, 'Vui lòng nhập email và mật khẩu.', true);
-                return;
-            }
-
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                // Thành công: onAuthStateChanged sẽ lo việc cập nhật giao diện
-                // Chỉ hiển thị thông báo ngắn
-                showMessage(loginMessage, 'Đăng nhập thành công!', false);
-                loginForm.reset();
-            } catch (error) {
-                let errorMsg = 'Sai email hoặc mật khẩu.';
-                if (error.code === 'auth/user-not-found') errorMsg = 'Không tìm thấy tài khoản.';
-                else if (error.code === 'auth/wrong-password') errorMsg = 'Mật khẩu không chính xác.';
-                else if (error.code === 'auth/invalid-email') errorMsg = 'Email không hợp lệ.';
-                else if (error.code === 'auth/too-many-requests') errorMsg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau.';
-                showMessage(loginMessage, `❌ ${errorMsg}`, true);
-            }
-        });
-
-        // Chuyển tab đăng ký / đăng nhập
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginContainer.style.display = 'none';
-            registerContainer.style.display = 'block';
-            userDashboard.style.display = 'none';
-            // Xóa thông báo
-            loginMessage.style.display = 'none';
-            registerMessage.style.display = 'none';
-        });
-
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginContainer.style.display = 'block';
-            registerContainer.style.display = 'none';
-            userDashboard.style.display = 'none';
-            loginMessage.style.display = 'none';
-            registerMessage.style.display = 'none';
-        });
-
-        logoutBtn.addEventListener('click', handleLogout);
-
-        // Theo dõi trạng thái đăng nhập toàn cục
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Đã đăng nhập: cập nhật Dashboard và lưu dữ liệu realtime
-                await saveUserToDatabase(user.uid, user.email); // Cập nhật lastLogin
-                await loadUserProfile(user);
-                dashboardUserEmail.textContent = user.email;
-                dashboardUserId.textContent = user.uid;
-                loginContainer.style.display = 'none';
-                registerContainer.style.display = 'none';
-                userDashboard.style.display = 'block';
-                // Nếu đang ở chế độ đăng ký nhưng user đã login -> ẩn đăng ký
-            } else {
-                // Chưa đăng nhập: hiển thị form login
-                loginContainer.style.display = 'block';
-                registerContainer.style.display = 'none';
-                userDashboard.style.display = 'none';
-                // Xóa các message
-                dashboardMessage.style.display = 'none';
-            }
-        });
-
-        // Khởi tạo mặc định
-        // Đảm bảo realtime database rule gợi ý (người dùng chỉ có thể đọc/ghi dữ liệu của mình)
-        // Đoạn code này không can thiệp rule, nhưng sẽ note trong comment hướng dẫn
-        
-        // Xử lý responsive & bổ sung meta
-        console.log("Ứng dụng đã sẵn sàng, Firebase + Realtime Database + Auth hoạt động");
-    </script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #e9f0fc 0%, #d9e4f5 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        /* Card chính */
-        .app-card {
-            max-width: 500px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(2px);
-            border-radius: 42px;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 8px 18px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            transition: all 0.2s ease;
-        }
-
-        .header {
-            background: #1e293b;
-            padding: 28px 24px;
-            text-align: center;
-        }
-
-        .header h1 {
-            color: white;
-            font-weight: 600;
-            font-size: 1.8rem;
-            letter-spacing: -0.3px;
-        }
-
-        .header p {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            margin-top: 8px;
-        }
-
-        .form-container {
-            padding: 32px 28px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-weight: 500;
-            font-size: 0.85rem;
-            margin-bottom: 6px;
-            color: #334155;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 1rem;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 28px;
-            transition: all 0.2s;
-            background: #f8fafc;
-            font-family: inherit;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-            background: white;
-        }
-
-        button {
-            width: 100%;
-            background: #2563eb;
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 1rem;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 8px;
-            font-family: inherit;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        button:hover {
-            background: #1d4ed8;
-            transform: scale(0.98);
-        }
-
-        .secondary-btn {
-            background: #f1f5f9;
-            color: #1e293b;
-            box-shadow: none;
-            margin-top: 12px;
-        }
-
-        .secondary-btn:hover {
-            background: #e2e8f0;
-            transform: none;
-        }
-
-        .link-text {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 0.9rem;
-            color: #475569;
-        }
-
-        .link-text a {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .link-text a:hover {
-            text-decoration: underline;
-        }
-
-        .message {
-            margin-top: 18px;
-            padding: 10px 12px;
-            border-radius: 50px;
-            background: #fef2f2;
-            font-size: 0.85rem;
-            text-align: center;
-            display: none;
-        }
-
-        /* Dashboard */
-        .dashboard-info {
-            background: #f8fafc;
-            border-radius: 28px;
-            padding: 20px;
-            margin-bottom: 24px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .info-row {
-            margin-bottom: 12px;
-            word-break: break-all;
-        }
-
-        .info-row strong {
-            color: #0f172a;
-            font-weight: 600;
-            display: inline-block;
-            width: 95px;
-        }
-
-        .user-profile-card {
-            background: #eef2ff;
-            border-radius: 24px;
-            padding: 18px;
-            margin: 20px 0;
-            font-size: 0.9rem;
-            border-left: 4px solid #3b82f6;
-        }
-
-        .logout-wrap {
-            margin-top: 15px;
-        }
-
-        footer {
-            text-align: center;
-            padding: 18px;
-            font-size: 0.7rem;
-            color: #6c757d;
-            border-top: 1px solid #edf2f7;
-            background: #ffffffd0;
-        }
-        @media (max-width: 550px) {
-            .form-container {
-                padding: 24px 20px;
-            }
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            .info-row strong {
-                width: 80px;
-            }
-        }
-        .hidden {
-            display: none;
-        }
-        button:active {
-            transform: scale(0.97);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>ĐIỂM DANH NHẬN QUÀ</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Roboto',sans-serif;}
+body{background:#f0f2f5;padding:16px;}
+.header{background:#b00000;color:#fff;padding:16px;text-align:center;border-radius:12px 12px 0 0;margin:-16px -16px 0 -16px;}
+.header h1{font-size:20px;margin-bottom:4px;}
+.header p{font-size:12px;opacity:0.9;}
+.container{max-width:1200px;margin:16px auto;}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.card h2{color:#b00000;font-size:16px;margin-bottom:12px;border-left:3px solid #b00000;padding-left:10px;}
+.dashboard{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.box{background:#b00000;color:#fff;padding:12px;border-radius:12px;text-align:center;}
+.box h3{font-size:24px;}
+.box p{font-size:11px;}
+button{background:#b00000;color:#fff;padding:8px 14px;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;margin:4px;}
+button:active{opacity:0.8;}
+.btn-green{background:#2e7d32;}
+.btn-blue{background:#2196f3;}
+.btn-orange{background:#ff9800;}
+.btn-purple{background:#673ab7;}
+input,select{padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;}
+.table-container{overflow-x:auto;margin-top:12px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:#b00000;color:#fff;padding:8px;position:sticky;top:0;}
+td{border:1px solid #eee;padding:8px;text-align:center;}
+.badge-success{background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:16px;font-size:11px;}
+.badge-warning{background:#ffebee;color:#c62828;padding:2px 8px;border-radius:16px;font-size:11px;}
+.search-box{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.search-box input{flex:2;min-width:150px;}
+.search-box select{width:120px;}
+.verify-card{max-width:500px;margin:10px auto;background:#fff;border-radius:20px;text-align:center;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.15);}
+.verify-card h3{margin-bottom:12px;font-size:18px;}
+.verify-card p{font-size:14px;color:#555;margin-bottom:15px;line-height:1.5;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;justify-content:center;align-items:center;}
+.modal-content{background:#fff;border-radius:20px;padding:20px;max-width:350px;width:90%;text-align:center;}
+.login-form{max-width:350px;margin:50px auto;background:#fff;border-radius:20px;padding:25px;}
+.login-form h2{text-align:center;color:#b00000;margin-bottom:20px;}
+.login-form input{width:100%;margin-bottom:12px;}
+.footer{text-align:center;padding:16px;color:#999;font-size:11px;}
+.admin-content{display:none;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+#hiddenQrEngine { position: absolute; top: -9999px; left: -9999px; visibility: hidden; }
+#reader { width: 100%; max-width: 450px; margin: 0 auto; border: 2px dashed #b00000; border-radius: 12px; overflow: hidden; background: #000; }
+</style>
 </head>
 <body>
-<div class="app-card">
-    <div class="header">
-        <h1>⏱️ Chấm Công</h1>
-        <p>Đăng nhập hoặc tạo tài khoản mới</p>
-    </div>
 
-    <!-- Form Đăng nhập -->
-    <div id="login-container" class="form-container">
-        <form id="login-form">
-            <div class="input-group">
-                <label>📧 Email</label>
-                <input type="email" id="login-email" placeholder="example@company.com" autocomplete="email" required>
-            </div>
-            <div class="input-group">
-                <label>🔒 Mật khẩu</label>
-                <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
-            </div>
-            <button type="submit">Đăng nhập</button>
-            <div class="link-text">
-                Chưa có tài khoản? <a href="#" id="show-register">Đăng ký ngay</a>
-            </div>
-            <div id="login-message" class="message"></div>
-        </form>
-    </div>
-
-    <!-- Form Đăng ký -->
-    <div id="register-container" class="form-container" style="display: none;">
-        <form id="register-form">
-            <div class="input-group">
-                <label>👤 Họ và tên (tùy chọn)</label>
-                <input type="text" id="register-fullname" placeholder="Nguyễn Văn A" autocomplete="name">
-            </div>
-            <div class="input-group">
-                <label>📧 Email</label>
-                <input type="email" id="register-email" placeholder="name@example.com" autocomplete="email" required>
-            </div>
-            <div class="input-group">
-                <label>🔒 Mật khẩu (tối thiểu 6 ký tự)</label>
-                <input type="password" id="register-password" placeholder="••••••••" autocomplete="new-password" required>
-            </div>
-            <button type="submit">Tạo tài khoản</button>
-            <div class="link-text">
-                Đã có tài khoản? <a href="#" id="show-login">Đăng nhập ngay</a>
-            </div>
-            <div id="register-message" class="message"></div>
-        </form>
-    </div>
-
-    <!-- Dashboard sau khi đăng nhập thành công -->
-    <div id="user-dashboard" class="form-container" style="display: none;">
-        <div class="dashboard-info">
-            <div class="info-row"><strong>✅ Trạng thái:</strong> Đã xác thực</div>
-            <div class="info-row"><strong>📧 Email:</strong> <span id="dashboard-user-email"></span></div>
-            <div class="info-row"><strong>🆔 User ID:</strong> <span id="dashboard-user-id" style="font-size: 0.75rem; word-break: break-all;"></span></div>
-        </div>
-        <div id="user-info-from-db" class="user-profile-card">
-            ⏳ Đang tải thông tin...
-        </div>
-        <button id="logout-btn" class="secondary-btn">🚪 Đăng xuất</button>
-        <div id="dashboard-message" class="message"></div>
-    </div>
-    <footer>
-        🔐 Bảo mật Firebase Auth + Realtime DB | Dữ liệu lưu theo User ID
-    </footer>
+<div class="header">
+    <h1>🏛️ ĐIỂM DANH NHẬN QUÀ</h1>
+    <h1>ỦY BAN MẶT TRẬN TỔ QUỐC VIỆT NAM PHƯỜNG NINH KIỀU</h1>
 </div>
 
-<!-- Hướng dẫn chỉnh sửa Rule trong Realtime Database (hiển thị console log và gợi ý) -->
+<div id="hiddenQrEngine"></div>
+
+<div id="loginPanel" class="container">
+    <div class="login-form">
+        <h2>🔐 ĐĂNG NHẬP CÁN BỘ</h2>
+        <p style="font-size:12px; color:#666; margin-bottom:15px; text-align:center;">Hệ thống nội bộ. Vui lòng nhập mật khẩu Admin để tiếp tục.</p>
+        <input type="password" id="adminPassword" placeholder="Mật khẩu quản trị">
+        <button id="loginBtn" style="width:100%;">Đăng nhập</button>
+        <div id="loginError" style="color:#c62828;margin-top:10px;text-align:center;display:none;">❌ Sai mật khẩu quản trị</div>
+    </div>
+</div>
+
+<div id="adminPanel" class="container admin-content">
+    <div class="card">
+        <h2>📷 MÁY QUÉT ĐIỂM DANH TRỰC TIẾP</h2>
+        <div id="reader"></div>
+        <div id="scannerFeedback" style="margin-top:10px; text-align:center; font-weight:bold; color:#b00000;">📷 Đang sẵn sàng chờ quét mã...</div>
+        <div id="quickVerifyResult"></div> 
+    </div>
+    
+    <div id="adminStatsPlaceholder"></div>
+</div>
+
+<div id="qrModal" class="modal">
+    <div class="modal-content">
+        <span style="float:right;font-size:24px;cursor:pointer;" onclick="document.getElementById('qrModal').style.display='none'">&times;</span>
+        <div id="modalQR" style="display:flex;justify-content:center;margin:15px 0;"></div>
+        <div id="modalInfo"></div>
+        <button onclick="printQR()" style="width:100%;margin-top:10px;">🖨️ In mẫu lẻ</button>
+    </div>
+</div>
+
+<div class="footer admin-content">Hệ thống điểm danh nhận quà | <a href="#" onclick="logout(); return false;" style="color: #b00000; text-decoration: underline; font-weight: bold;">Đăng xuất cán bộ</a></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <script type="module">
-    // In thêm hướng dẫn cấu hình Rule an toàn cho Realtime Database để chỉ đọc/ghi theo UID
-    (function ruleGuidance() {
-        console.log("%c🚨 QUAN TRỌNG - CẤU HÌNH RULE cho Realtime Database:", "color: #f97316; font-size: 14px; font-weight: bold;");
-        console.log(`Sao chép và dán rule dưới đây vào "Rules" trong Realtime Database (Firebase Console):
-{
-  "rules": {
-    "users": {
-      "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid"
-      }
-    }
-  }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = { 
+    apiKey: "AIzaSyCnrj2LgPIhmHQ-2gFsj2WzEa1n0RzWrbw",
+    authDomain: "van-ban-65d6c.firebaseapp.com",
+    databaseURL: "https://van-ban-65d6c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "van-ban-65d6c",
+    storageBucket: "van-ban-65d6c.firebasestorage.app",
+    messagingSenderId: "841852290034",
+    appId: "1:841852290034:web:21b9c176c86420b9f6216b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let allRecipients = [];
+let currentQR = null;
+let html5QrcodeScanner = null;
+const ADMIN_PASSWORD = "ubnd2024";
+
+window.logout = function() {
+    localStorage.removeItem('isAdminLoggedIn');
+    if(html5QrcodeScanner) { html5QrcodeScanner.clear(); }
+    window.location.href = window.location.href.split('?')[0]; // Xóa mọi tham số trên link khi thoát
+};
+
+function escapeHtml(s){if(!s)return'';return s.replace(/[&<>]/g,function(m){return m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;':m;});}
+function formatTime(d){return d.toLocaleTimeString('vi-VN');}
+function formatDate(d){return d.toLocaleDateString('vi-VN');}
+function getTodayStr(){return new Date().toISOString().split('T')[0];}
+function getBaseUrl(){return window.location.href.split('?')[0];}
+function randomId(){return 'HD' + Date.now() + Math.floor(Math.random()*10000);}
+
+// Bật Camera trực tiếp trên màn hình Admin
+function startScanner() {
+    if(html5QrcodeScanner) return;
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    
+    html5QrcodeScanner.start(
+        { facingMode: "environment" }, 
+        config,
+        onScanSuccess,
+        onScanFailure
+    ).catch(err => {
+        document.getElementById('scannerFeedback').innerHTML = `<span style="color:red;">⚠️ Không mở được Camera: ${err}</span>`;
+    });
 }
-Điều này đảm bảo mỗi người dùng chỉ có thể truy cập đúng dữ liệu của mình theo ID.`);
-    })();
+
+// Khi camera của ADMIN quét trúng mã QR
+async function onScanSuccess(decodedText) {
+    try {
+        let id = "";
+        if(decodedText.includes('?id=')) {
+            let urlParams = new URLSearchParams(decodedText.split('?')[1]);
+            id = urlParams.get('id');
+        } else {
+            id = decodedText.trim();
+        }
+        
+        if(!id) return;
+        
+        document.getElementById('scannerFeedback').innerHTML = "⏳ Đang truy xuất dữ liệu từ mã...";
+        if (html5QrcodeScanner) { await html5QrcodeScanner.pause(true); }
+        
+        await handleAdminCheckIn(id);
+        
+    } catch (e) {
+        document.getElementById('scannerFeedback').innerHTML = "❌ Lỗi đọc dữ liệu mã QR.";
+        if (html5QrcodeScanner) html5QrcodeScanner.resume();
+    }
+}
+
+function onScanFailure(error) { }
+
+// Admin xử lý việc nhấn xác nhận cho người dân ngay trên máy mình
+async function handleAdminCheckIn(id) {
+    let container = document.getElementById('quickVerifyResult');
+    let feedback = document.getElementById('scannerFeedback');
+    let today = getTodayStr();
+    
+    try {
+        let snap = await get(child(ref(db), 'recipients/' + id));
+        if(!snap.exists()){
+            container.innerHTML = `
+                <div class="verify-card" style="border: 2px solid #c62828;">
+                    <h3 style="color:#c62828;">❌ MÃ KHÔNG HỢP LỆ</h3>
+                    <p>Mã QR này không tồn tại trên hệ thống dữ liệu.</p>
+                    <button class="btn-orange" id="btnResumeScan" style="width:100%;">Tiếp tục quét</button>
+                </div>`;
+            feedback.innerHTML = "";
+            document.getElementById('btnResumeScan').onclick = () => resumeCamera();
+            return;
+        }
+        
+        let data = snap.val();
+        let received = await get(child(ref(db), 'received/' + id + '/' + today));
+        
+        if(received.exists()){
+            container.innerHTML = `
+                <div class="verify-card" style="border: 2px solid #ff9800;">
+                    <h3 style="color:#ff9800;">⚠️ ĐÃ NHẬN QUÀ RỒI</h3>
+                    <p>Danh tính: <strong>${escapeHtml(data.hoTen)}</strong><br>Địa chỉ: ${escapeHtml(data.diaChi)}</p>
+                    <div style="background:#fff3e0;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px;color:#e65100;">
+                        Đã phát lúc: <b>${received.val().time}</b> hôm nay.
+                    </div>
+                    <button class="btn-orange" id="btnResumeScan" style="width:100%;">Quét người tiếp theo</button>
+                </div>`;
+            feedback.innerHTML = "";
+            document.getElementById('btnResumeScan').onclick = () => resumeCamera();
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="verify-card" style="border: 2px solid #2e7d32; background:#f9fff9;">
+                <h3 style="color:#2e7d32;">📋 THÔNG TIN NGƯỜI ĐẾN</h3>
+                <p style="text-align:left;background:#fff;padding:12px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                    • <b>Họ tên:</b> ${escapeHtml(data.hoTen)}<br>
+                    • <b>Địa chỉ:</b> ${escapeHtml(data.diaChi)}<br>
+                    • <b>Diện:</b> ${escapeHtml(data.thuocDien || '---')}<br>
+                    • <b>Khu vực:</b> ${escapeHtml(data.khuVuc || '---')}
+                </p>
+                <button id="btnAdminConfirm" class="btn-green" style="width:100%;padding:14px;font-size:16px;margin-top:10px;">✅ Xác Nhận Đã Nhận Quà</button>
+                <button id="btnCancelScan" class="btn-orange" style="width:100%;background:#777;margin-top:5px;">Hủy bỏ</button>
+            </div>`;
+        feedback.innerHTML = "✨ Đã quét thành công!";
+        
+        document.getElementById('btnCancelScan').onclick = () => resumeCamera();
+        
+        document.getElementById('btnAdminConfirm').onclick = async () => {
+            let btn = document.getElementById('btnAdminConfirm');
+            btn.innerHTML = "⏳ Đang ghi dữ liệu...";
+            btn.disabled = true;
+            
+            let now = new Date();
+            await set(ref(db, 'received/'+id+'/'+today), {
+                id, hoTen: data.hoTen, diaChi: data.diaChi,
+                time: formatTime(now), datetime: now.toISOString()
+            });
+            await update(ref(db, 'recipients/'+id), { received: true, receivedTime: formatTime(now) });
+            
+            container.innerHTML = `
+                <div class="verify-card" style="background:#e8f5e9; border:2px solid #2e7d32;">
+                    <h3 style="color:#2e7d32;">✅ ĐÃ PHÁT QUÀ CHÍNH XÁC</h3>
+                    <p>Ghi nhận thành công cho ông/bà:<br><b>${escapeHtml(data.hoTen)}</b> lúc ${formatTime(now)}.</p>
+                    <button id="btnResumeScan" class="btn-green" style="width:100%;">Quét người mới</button>
+                </div>`;
+            
+            document.getElementById('btnResumeScan').onclick = () => {
+                resumeCamera();
+                loadData(); 
+            };
+        };
+        
+    } catch (e) {
+        container.innerHTML = `<div class="verify-card">❌ Lỗi máy chủ: ${e.message}</div>`;
+        resumeCamera();
+    }
+}
+
+function resumeCamera() {
+    document.getElementById('quickVerifyResult').innerHTML = "";
+    document.getElementById('scannerFeedback').innerHTML = "📷 Đang sẵn sàng chờ quét mã tiếp theo...";
+    if (html5QrcodeScanner) { html5QrcodeScanner.resume(); }
+}
+
+function generateBase64Qr(text) {
+    return new Promise((resolve) => {
+        let container = document.getElementById('hiddenQrEngine');
+        container.innerHTML = '';
+        new QRCode(container, { text: text, width: 150, height: 150, correctLevel: QRCode.CorrectLevel.H });
+        setTimeout(() => {
+            let img = container.querySelector('img');
+            if (img) resolve(img.src.split(',')[1]);
+            else {
+                let canvas = container.querySelector('canvas');
+                resolve(canvas.toDataURL().split(',')[1]);
+            }
+        }, 100);
+    });
+}
+
+async function exportExcelWithQR(){
+    if(allRecipients.length===0){ alert('Không có dữ liệu để xuất'); return; }
+    let btn = document.getElementById('exportQrBtn');
+    let oldText = btn.innerHTML;
+    btn.innerHTML = '⏳ Đang vẽ QR...';
+    btn.disabled = true;
+    try{
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('DanhSachAnhQR');
+        worksheet.addRow(['STT', 'HỌ VÀ TÊN', 'ĐỊA CHỈ', 'THUỘC DIỆN', 'KHU VỰC', 'GHI CHÚ', 'MÃ ĐIỂM DANH (QR)']);
+        worksheet.columns = [
+            { width: 8, style: { alignment: { vertical: 'middle', horizontal: 'center' } } },
+            { width: 25, style: { alignment: { vertical: 'middle', horizontal: 'left' } } },
+            { width: 35, style: { alignment: { vertical: 'middle', horizontal: 'left' } } },
+            { width: 20, style: { alignment: { vertical: 'middle', horizontal: 'center' } } },
+            { width: 15, style: { alignment: { vertical: 'middle', horizontal: 'center' } } },
+            { width: 20, style: { alignment: { vertical: 'middle', horizontal: 'left' } } },
+            { width: 22, style: { alignment: { vertical: 'middle', horizontal: 'center' } } }
+        ];
+        worksheet.getRow(1).height = 30;
+        worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+        worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'B00000' } };
+        
+        for(let i = 0; i < allRecipients.length; i++){
+            let r = allRecipients[i];
+            let rowNumber = i + 2;
+            worksheet.addRow([r.stt || i + 1, r.hoTen, r.diaChi, r.thuocDien || '', r.khuVuc || '', r.ghiChu || '', '']);
+            worksheet.getRow(rowNumber).height = 110;
+            let qrBase64 = await generateBase64Qr(r.qrUrl);
+            let imageId = workbook.addImage({ base64: qrBase64, extension: 'png' });
+            worksheet.addImage(imageId, {
+                tl: { col: 6, row: rowNumber - 1, xOffset: 5, yOffset: 5 },
+                ext: { width: 135, height: 135 }
+            });
+        }
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `DANH_SACH_CO_ANH_QR_${getTodayStr()}.xlsx`;
+        link.click();
+        alert(`✅ Đã xuất thành công file Excel chứa hình ảnh QR cho ${allRecipients.length} người!`);
+    }catch(e){ alert('Lỗi xuất dữ liệu: ' + e.message); } 
+    finally{ btn.innerHTML = oldText; btn.disabled = false; }
+}
+
+function exportBasicExcel(){
+    if(allRecipients.length===0){ alert('Chưa có dữ liệu'); return; }
+    let data = allRecipients.map((r,i)=>({
+        'STT': r.stt||i+1, 'HỌ TÊN': r.hoTen, 'ĐỊA CHỈ': r.diaChi,
+        'DIỆN': r.thuocDien||'', 'KHU VỰC': r.khuVuc||'', 'GHI CHÚ': r.ghiChu||'',
+        'TRẠNG THÁI': r.received?'Đã nhận':'Chưa nhận', 'GIỜ NHẬN': r.receivedTime||'---'
+    }));
+    let ws = XLSX.utils.json_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'BaoCao');
+    XLSX.writeFile(wb, `BAO_CAO_${formatDate(new Date())}.xlsx`);
+}
+
+function printAllInvites(){
+    if(allRecipients.length===0){ alert('Chưa có dữ liệu'); return; }
+    let win = window.open('', '_blank');
+    let today = formatDate(new Date());
+    win.document.write(`<!DOCTYPE html><html><head><title>Giấy mời</title><meta charset="UTF-8"><style>
+        body{font-family:Arial;padding:20px;background:#eee;}
+        .invite{background:#fff;border:1px solid #b00000;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;page-break-after:always;}
+        .qr{display:flex;justify-content:center;margin:15px 0;}
+        @media print{.invite{page-break-after:always;margin:0;border:none;}}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+    </head><body><div id="invites"></div><script>
+    const data = ${JSON.stringify(allRecipients)};
+    const container = document.getElementById('invites');
+    data.forEach(r => {
+        let div = document.createElement('div'); div.className = 'invite';
+        let qrId = 'qr'+r.id.replace(/[^a-zA-Z0-9]/g,'_');
+        div.innerHTML = '<h2 style="color:#b00000;">🎁 GIẤY MỜI NHẬN QUÀ</h2><h3>Kính mời: '+r.hoTen+'</h3><div class="qr" id="'+qrId+'"></div><p>🏠 '+r.diaChi+'</p>'+(r.thuocDien?'<p>📋 '+r.thuocDien+'</p>':'')+(r.khuVuc?'<p>🗺️ '+r.khuVuc+'</p>':'')+'<p>⏰ Ngày: ${today}</p><hr><p style="font-size:12px;">※ Quét QR để điểm danh ※</p>';
+        container.appendChild(div);
+        new QRCode(document.getElementById(qrId), { text: r.qrUrl, width: 160, height: 160 });
+    });
+    setTimeout(() => window.print(), 600);
+    <\/script></body></html>`);
+    win.document.close();
+}
+
+function printAllQRs(){
+    if(allRecipients.length===0){ alert('Chưa có dữ liệu'); return; }
+    let win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><title>Mã QR</title><style>
+        .grid{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;}
+        .card{border:1px solid #ddd;padding:12px;text-align:center;width:180px;}
+        @media print{.card{page-break-inside:avoid;}}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+    </head><body><div class="grid" id="grid"></div><script>
+    const data = ${JSON.stringify(allRecipients)};
+    const grid = document.getElementById('grid');
+    data.forEach(r => {
+        let card = document.createElement('div'); card.className = 'card';
+        let qrId = 'qr'+r.id.replace(/[^a-zA-Z0-9]/g,'_');
+        card.innerHTML = '<div id="'+qrId+'"></div><h4>'+r.hoTen+'</h4>';
+        grid.appendChild(card);
+        new QRCode(document.getElementById(qrId), { text: r.qrUrl, width: 130, height: 130 });
+    });
+    setTimeout(() => window.print(), 600);
+    <\/script></body></html>`);
+    win.document.close();
+}
+
+function showQR(id){
+    let r = allRecipients.find(x=>x.id===id);
+    if(!r) return;
+    currentQR = r;
+    let modal = document.getElementById('qrModal');
+    document.getElementById('modalQR').innerHTML = '';
+    new QRCode(document.getElementById('modalQR'), { text: r.qrUrl, width: 200, height: 200 });
+    document.getElementById('modalInfo').innerHTML = `<p><strong>${escapeHtml(r.hoTen)}</strong></p><p>${escapeHtml(r.diaChi)}</p>`;
+    modal.style.display = 'flex';
+}
+
+window.printQR = function(){
+    if(!currentQR) return;
+    let win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><title>QR - ${currentQR.hoTen}</title><style>body{text-align:center;padding:30px;}</style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script></head><body><div id="qr" style="display:flex;justify-content:center;margin-bottom:15px;"></div><h3>${currentQR.hoTen}</h3><p>${currentQR.diaChi}</p><script>new QRCode(document.getElementById('qr'),{text:'${currentQR.qrUrl}',width:200,height:200}); setTimeout(()=>window.print(),300);<\/script></body></html>`);
+    win.document.close();
+}
+
+async function deleteAll(){
+    if(confirm('XÓA TOÀN BỘ DỮ LIỆU?')){
+        await remove(ref(db, 'recipients'));
+        await remove(ref(db, 'received'));
+        alert('Đã xóa sạch dữ liệu');
+        if(document.getElementById('total')) await loadData();
+    }
+}
+
+async function deleteToday(){
+    if(confirm('Xóa toàn bộ điểm danh của ngày hôm nay?')){
+        let today = getTodayStr();
+        let snap = await get(child(ref(db), 'received'));
+        if(snap.exists()){
+            for(let uid in snap.val()){
+                if(snap.val()[uid] && snap.val()[uid][today]) await remove(ref(db, 'received/'+uid+'/'+today));
+            }
+        }
+        let recipientsSnap = await get(child(ref(db), 'recipients'));
+        if(recipientsSnap.exists()){
+            for(let id in recipientsSnap.val()){
+                await update(ref(db, 'recipients/'+id), { received: false, receivedTime: null });
+            }
+        }
+        alert('Đã xóa dữ liệu hôm nay');
+        if(document.getElementById('total')) await loadData();
+    }
+}
+
+async function renderAdmin(){
+    document.getElementById('adminStatsPlaceholder').innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div class="card" style="margin:0; padding: 12px;">
+                <h2 style="font-size:14px; margin-bottom:8px;">📊 THỐNG KÊ HÔM NAY</h2>
+                <div class="dashboard" style="gap: 6px;">
+                    <div class="box" style="padding:6px;"><h3 id="total" style="font-size:18px;">0</h3><p style="font-size:10px;">Tổng CSĐL</p></div>
+                    <div class="box" style="background:#2e7d32; padding:6px;"><h3 id="received" style="font-size:18px;">0</h3><p style="font-size:10px;">Đã nhận</p></div>
+                    <div class="box" style="background:#795548; padding:6px;"><h3 id="notReceived" style="font-size:18px;">0</h3><p style="font-size:10px;">Chưa nhận</p></div>
+                    <div class="box" style="background:#009688; padding:6px;"><h3 id="rate" style="font-size:18px;">0</h3><p style="font-size:10px;">Tỷ lệ (%)</p></div>
+                </div>
+            </div>
+            
+            <div class="card" style="margin:0; padding: 12px;">
+                <h2 style="font-size:14px; margin-bottom:8px;">📂 THAO TÁC DỮ LIỆU</h2>
+                <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px;">
+                    <input type="file" id="excelFile" accept=".xlsx,.xls" style="flex:1; padding: 4px 8px; font-size:12px;">
+                    <button id="importBtn" class="btn-blue" style="margin:0; padding: 6px 10px; font-size:12px;">📤 Import</button>
+                    <button id="sampleBtn" class="btn-green" style="margin:0; padding: 6px 10px; font-size:12px;">📥 Mẫu</button>
+                </div>
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px;">
+                    <button id="exportBasicBtn" class="btn-green" style="margin:0; padding: 6px 10px; font-size:12px; flex:1;">📊 Xuất Báo Cáo</button>
+                    <button id="exportQrBtn" class="btn-purple" style="margin:0; padding: 6px 10px; font-size:12px; flex:1;">🖼️ Xuất Có Ảnh QR</button>
+                </div>
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px;">
+                    <button id="printInvitesBtn" class="btn-orange" style="margin:0; padding: 6px 10px; font-size:12px; flex:1;">🖨️ In Giấy Mời</button>
+                    <button id="printAllQrBtn" class="btn-blue" style="margin:0; padding: 6px 10px; font-size:12px; flex:1;">🖨️ In Nhãn QR</button>
+                </div>
+                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                    <button id="deleteTodayBtn" class="btn-orange" style="margin:0; padding: 4px 8px; font-size:11px; flex:1; opacity:0.9;">🗑️ Xóa ngày này</button>
+                    <button id="deleteAllBtn" style="margin:0; padding: 4px 8px; font-size:11px; flex:1; background:#c62828; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">⚠️ Xóa hệ thống</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="padding: 12px;">
+            <h2 style="font-size:14px; margin-bottom:8px;">📋 DANH SÁCH CHI TIẾT</h2>
+            <div class="search-box" style="margin-bottom: 8px; gap: 6px;">
+                <input type="text" id="search" placeholder="🔍 Tìm kiếm nhanh..." style="padding: 6px 10px; font-size:13px;">
+                <select id="statusFilter" style="width:110px; padding: 6px; font-size:13px;"><option value="all">Tất cả ĐT</option><option value="received">Đã nhận</option><option value="not">Chưa nhận</option></select>
+                <select id="areaFilter" style="width:110px; padding: 6px; font-size:13px;"><option value="all">Tất cả KV</option></select>
+            </div>
+            <div class="table-container"><table style="font-size:11px;"><thead><tr><th>STT</th><th>HỌ TÊN</th><th>ĐỊA CHỈ</th><th>DIỆN</th><th>KHU VỰC</th><th>TRẠNG THÁI</th><th>XEM QR</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+        </div>
+    `;
+    
+    document.getElementById('importBtn').onclick = () => importExcel();
+    document.getElementById('sampleBtn').onclick = downloadSample;
+    document.getElementById('exportBasicBtn').onclick = () => exportBasicExcel();
+    document.getElementById('exportQrBtn').onclick = () => exportExcelWithQR();
+    document.getElementById('printInvitesBtn').onclick = () => printAllInvites();
+    document.getElementById('printAllQrBtn').onclick = () => printAllQRs();
+    document.getElementById('deleteTodayBtn').onclick = () => deleteToday();
+    document.getElementById('deleteAllBtn').onclick = () => deleteAll();
+    document.getElementById('search').oninput = () => filterTable();
+    document.getElementById('statusFilter').onchange = () => filterTable();
+    document.getElementById('areaFilter').onchange = () => filterTable();
+    
+    await loadData();
+    startScanner();
+}
+
+async function importExcel(){
+    let file = document.getElementById('excelFile').files[0];
+    if(!file){ alert('Vui lòng chọn tệp tin Excel!'); return; }
+    let reader = new FileReader();
+    reader.onload = async function(e){
+        let wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        let sheet = wb.Sheets[wb.SheetNames[0]];
+        let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        
+        if(!json || json.length < 2){
+            alert('File Excel không có dữ liệu hoặc không đúng định dạng!');
+            return;
+        }
+        
+        let headers = json[0];
+        let colIndex = { stt: -1, hoTen: -1, diaChi: -1, thuocDien: -1, khuVuc: -1, ghiChu: -1 };
+        
+        headers.forEach((h, idx) => {
+            if(!h) return;
+            let lowerH = String(h).toLowerCase().trim();
+            let normalized = lowerH.replace(/[_\s\u00A0]+/g, '').replace(/[.,;:!?]/g, '');
+            
+            if(normalized.includes('stt') || normalized === 'stt') colIndex.stt = idx;
+            else if(normalized.includes('họ') && normalized.includes('tên')) colIndex.hoTen = idx;
+            else if(normalized.includes('họtên')) colIndex.hoTen = idx;
+            else if(normalized.includes('địa') && normalized.includes('chỉ')) colIndex.diaChi = idx;
+            else if(normalized.includes('địachỉ')) colIndex.diaChi = idx;
+            else if(normalized.includes('thuộc') && normalized.includes('diện')) colIndex.thuocDien = idx;
+            else if(normalized.includes('thuộcdiện')) colIndex.thuocDien = idx;
+            else if(normalized.includes('khu') && normalized.includes('vực')) colIndex.khuVuc = idx;
+            else if(normalized.includes('khuvực')) colIndex.khuVuc = idx;
+            else if(normalized.includes('ghi') && normalized.includes('chú')) colIndex.ghiChu = idx;
+            else if(normalized.includes('ghichú')) colIndex.ghiChu = idx;
+        });
+        
+        if(colIndex.hoTen === -1 || colIndex.diaChi === -1){
+            alert('File Excel thiếu cột bắt buộc: "HỌ VÀ TÊN" hoặc "ĐỊA CHỈ"!');
+            return;
+        }
+        
+        let success = 0;
+        for(let i = 1; i < json.length; i++){
+            let row = json[i];
+            if(!row || row.length === 0) continue;
+            let hoTen = colIndex.hoTen !== -1 ? (row[colIndex.hoTen] || '').toString().trim() : '';
+            let diaChi = colIndex.diaChi !== -1 ? (row[colIndex.diaChi] || '').toString().trim() : '';
+            if(!hoTen || !diaChi) continue;
+            
+            let stt = colIndex.stt !== -1 ? (row[colIndex.stt] || '').toString().trim() : '';
+            let thuocDien = colIndex.thuocDien !== -1 ? (row[colIndex.thuocDien] || '').toString().trim() : '';
+            let khuVuc = colIndex.khuVuc !== -1 ? (row[colIndex.khuVuc] || '').toString().trim() : '';
+            let ghiChu = colIndex.ghiChu !== -1 ? (row[colIndex.ghiChu] || '').toString().trim() : '';
+            
+            let id = randomId();
+            let qrUrl = getBaseUrl() + '?id=' + id;
+            await set(ref(db, 'recipients/'+id), {
+                id, stt: stt || '', hoTen, diaChi, 
+                thuocDien: thuocDien || '', khuVuc: khuVuc || '', ghiChu: ghiChu || '',
+                qrUrl, received: false, createdAt: new Date().toISOString()
+            });
+            success++;
+        }
+        alert(`✅ Import thành công ${success} người!`);
+        await loadData();
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function downloadSample(){
+    let data = [
+        { "STT": 1, "HỌ VÀ TÊN": "Nguyễn Văn A", "ĐỊA CHỈ": "Số 1 Đường Lê Lợi", "THUỘC DIỆN": "Hộ nghèo", "KHU VỰC": "Tổ 1", "GHI CHÚ": "" }
+    ];
+    let ws = XLSX.utils.json_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Mau');
+    XLSX.writeFile(wb, 'Mau_Import_Diem_Danh.xlsx');
+}
+
+async function loadData(){
+    let snap = await get(child(ref(db), 'recipients'));
+    let today = getTodayStr();
+    let recSnap = await get(child(ref(db), 'received'));
+    let receivedToday = {};
+    if(recSnap.exists()){
+        for(let uid in recSnap.val()){
+            if(recSnap.val()[uid] && recSnap.val()[uid][today]) receivedToday[uid] = recSnap.val()[uid][today];
+        }
+    }
+    allRecipients = [];
+    let total=0, recCount=0, areas=new Set();
+    if(snap.exists()){
+        for(let id in snap.val()){
+            let r = snap.val()[id];
+            total++;
+            let isRec = receivedToday[id] ? true : false;
+            if(isRec) recCount++;
+            if(r.khuVuc && r.khuVuc.trim()) areas.add(r.khuVuc.trim());
+            allRecipients.push({
+                id, stt: r.stt || '', hoTen: r.hoTen, diaChi: r.diaChi,
+                thuocDien: r.thuocDien || '', khuVuc: r.khuVuc || '', ghiChu: r.ghiChu || '',
+                received: isRec, receivedTime: receivedToday[id]?.time || null, qrUrl: r.qrUrl
+            });
+        }
+    }
+    
+    allRecipients.sort((a,b) => (parseInt(a.stt) || 0) - (parseInt(b.stt) || 0));
+    
+    let areaSelect = document.getElementById('areaFilter');
+    if(areaSelect){
+        let val = areaSelect.value;
+        areaSelect.innerHTML = '<option value="all">Tất cả khu vực</option>';
+        [...areas].sort().forEach(a=>{ areaSelect.innerHTML += `<option value="${a.replace(/"/g, '&quot;')}">${a}</option>`; });
+        if(val && areaSelect.querySelector(`option[value="${val.replace(/"/g, '&quot;')}"]`)) areaSelect.value=val;
+    }
+    
+    if(document.getElementById('total')) document.getElementById('total').innerText = total;
+    if(document.getElementById('received')) document.getElementById('received').innerText = recCount;
+    if(document.getElementById('notReceived')) document.getElementById('notReceived').innerText = total-recCount;
+    if(document.getElementById('rate')) document.getElementById('rate').innerText = total>0?Math.round(recCount/total*100):0;
+    
+    filterTable();
+}
+
+function filterTable(){
+    let tbody = document.getElementById('tableBody');
+    if(!tbody) return;
+    
+    let search = document.getElementById('search') ? document.getElementById('search').value.toLowerCase() : '';
+    let status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : 'all';
+    let area = document.getElementById('areaFilter') ? document.getElementById('areaFilter').value : 'all';
+    
+    let filtered = allRecipients.filter(r => {
+        let match = (r.hoTen || '').toLowerCase().includes(search) || (r.diaChi || '').toLowerCase().includes(search);
+        let matchStatus = status==='all' || (status==='received' && r.received) || (status==='not' && !r.received);
+        let matchArea = area==='all' || (r.khuVuc || '') === area;
+        return match && matchStatus && matchArea;
+    });
+    
+    if(filtered.length===0){ tbody.innerHTML='<tr><td colspan="7">📭 Không tìm thấy kết quả</td></tr>'; return; }
+    tbody.innerHTML = '';
+    filtered.forEach((r,i)=>{
+        let statusHtml = r.received ? `<span class="badge-success">✅ Đã nhận<br>${r.receivedTime || ''}</span>` : `<span class="badge-warning">⏳ Chưa nhận</span>`;
+        tbody.innerHTML += `<tr>
+            <td>${r.stt || (i+1)}</td>
+            <td style="text-align:left; font-weight:500;">${escapeHtml(r.hoTen)}</td>
+            <td style="text-align:left">${escapeHtml(r.diaChi)}</td>
+            <td>${escapeHtml(r.thuocDien) || '---'}</td>
+            <td>${escapeHtml(r.khuVuc) || '---'}</td>
+            <td>${statusHtml}</td>
+            <td><button class="view-qr" data-id="${r.id}" style="background:#2196f3;padding:4px 10px;">🔲 QR</button></td>
+        </tr>`;
+    });
+    document.querySelectorAll('.view-qr').forEach(btn=>{ btn.onclick=()=>showQR(btn.dataset.id); });
+}
+
+function login(){
+    let pwd = document.getElementById('adminPassword').value;
+    if(pwd === ADMIN_PASSWORD){
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        showAdminInterface();
+    }else{
+        document.getElementById('loginError').style.display='block';
+    }
+}
+
+function showAdminInterface() {
+    document.getElementById('loginPanel').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    document.querySelectorAll('.admin-content').forEach(el=>el.style.display='block');
+    renderAdmin();
+}
+
+function initSystem() {
+    // KHÓA HOÀN TOÀN: Bất kể link có chứa ID hay không, tất cả mọi máy đều phải qua màn hình đăng nhập
+    if(localStorage.getItem('isAdminLoggedIn') === 'true') {
+        showAdminInterface();
+    } else {
+        document.getElementById('loginBtn').onclick = login;
+        document.getElementById('adminPassword').onkeypress = e => { if(e.key==='Enter') login(); };
+        document.getElementById('loginPanel').style.display = 'block';
+        document.getElementById('adminPanel').style.display = 'none';
+        document.querySelectorAll('.admin-content').forEach(el=>el.style.display='none');
+    }
+}
+
+initSystem();
 </script>
 </body>
 </html>
