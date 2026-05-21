@@ -7,437 +7,90 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #eef2f9;
-            padding: 16px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #1e2b3c 0%, #0f212f 100%);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 16px 16px 0 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .header h1 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .header h1 i {
-            background: #ff9800;
-            padding: 5px;
-            border-radius: 50%;
-            font-size: 0.9rem;
-            color: #1e2b3c;
-        }
-
-        .user-info {
-            background: #2d4a6e40;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-
-        .stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .stat-box {
-            background: white;
-            border-radius: 12px;
-            padding: 6px 14px;
-            text-align: center;
-            font-weight: 600;
-            color: #2563eb;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            font-size: 0.7rem;
-            position: relative;
-            min-width: 80px;
-        }
-
-        .stat-box .delete-loai {
-            position: absolute;
-            top: 2px;
-            right: 4px;
-            cursor: pointer;
-            font-size: 10px;
-            color: #ef4444;
-            background: white;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
-        }
-
-        .stat-box .delete-loai:hover {
-            opacity: 1;
-            background: #fee2e2;
-        }
-
-        .section {
-            background: white;
-            border-radius: 16px;
-            padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .col {
-            flex: 1;
-            min-width: 240px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 3px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: #475569;
-            text-transform: uppercase;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 6px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            background: white;
-            font-family: inherit;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #2c7da0;
-            box-shadow: 0 0 0 2px rgba(44,125,160,0.1);
-        }
-
-        textarea {
-            min-height: 60px;
-            resize: vertical;
-        }
-
-        .form-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 10px;
-        }
-
-        .mini-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .mini-col {
-            flex: 1;
-        }
-
-        .select-with-button {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-
-        .select-with-button select {
-            flex: 1;
-        }
-
-        .btn-dots {
-            width: 32px;
-            height: 32px;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .btn-dots:hover {
-            background: #e2e8f0;
-        }
-
-        .checkbox-group {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 8px 12px;
-        }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.7rem;
-            text-transform: none;
-            font-weight: 500;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            margin: 0;
-        }
-
-        /* 3 checkbox nằm ngang */
-        .checkbox-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 10px;
-        }
-        
-        .checkbox-item {
-            flex: 1;
-            min-width: 140px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 8px 12px;
-        }
-        
-        .checkbox-item label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.7rem;
-            text-transform: none;
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-        
-        .checkbox-item input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            margin: 0;
-        }
-        
-        .checkbox-item input[type="text"] {
-            margin-top: 6px;
-            font-size: 0.65rem;
-            padding: 5px 8px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        button {
-            flex: 1;
-            min-width: 100px;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-        }
-
-        .btn-save { background: #2c7da0; color: white; }
-        .btn-delete { background: #dc2626; color: white; }
-        .btn-close { background: #64748b; color: white; }
-        .btn-search { background: #10b981; color: white; }
-
-        .tra-loi-textbox {
-            margin-top: 8px;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            width: 90%;
-            max-width: 350px;
-        }
-
-        .modal-content h3 {
-            font-size: 1rem;
-            margin-bottom: 12px;
-            color: #1e2b3c;
-        }
-
-        .modal-content input {
-            margin: 5px 0;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .modal-buttons button {
-            min-width: auto;
-            padding: 8px;
-        }
-
-        .message {
-            margin-top: 12px;
-            padding: 8px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 0.7rem;
-            font-weight: 500;
-            display: none;
-        }
-
-        .success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        @media (max-width: 768px) {
-            body { padding: 8px; }
-            .mini-row { flex-direction: column; }
-            .col { min-width: 100%; }
-            .stats { justify-content: center; }
-            button { padding: 6px 10px; font-size: 0.65rem; }
-            .checkbox-item { min-width: 100%; }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#eef2f9;padding:16px}
+        .header{background:linear-gradient(135deg,#1e2b3c,#0f212f);color:#fff;padding:12px 20px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+        .header h1{font-size:1.2rem;font-weight:600;display:flex;align-items:center;gap:8px}
+        .header h1 i{background:#ff9800;padding:5px;border-radius:50%;font-size:.9rem;color:#1e2b3c}
+        .user-info{background:#2d4a6e40;padding:4px 12px;border-radius:20px;font-size:.7rem;display:flex;align-items:center;gap:8px}
+        .container{max-width:1300px;margin:0 auto}
+        .stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .stat-box{background:#fff;border-radius:12px;padding:6px 14px;text-align:center;font-weight:600;color:#2563eb;box-shadow:0 1px 3px #00000014;font-size:.7rem;position:relative;min-width:80px}
+        .stat-box .delete-loai{position:absolute;top:2px;right:4px;cursor:pointer;font-size:10px;color:#ef4444;background:#fff;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:.6}
+        .stat-box .delete-loai:hover{opacity:1;background:#fee2e2}
+        .section{background:#fff;border-radius:16px;padding:12px;box-shadow:0 1px 3px #00000014}
+        .row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+        .col{flex:1;min-width:240px}
+        label{display:block;margin-bottom:3px;font-size:.65rem;font-weight:600;color:#475569;text-transform:uppercase}
+        input,textarea,select{width:100%;padding:6px 10px;border:1px solid #cbd5e1;border-radius:10px;font-size:.7rem;background:#fff;font-family:inherit}
+        input:focus,textarea:focus,select:focus{outline:none;border-color:#2c7da0;box-shadow:0 0 0 2px #2c7da01a}
+        textarea{min-height:60px;resize:vertical}
+        .form-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px}
+        .mini-row{display:flex;gap:8px;margin-bottom:8px}
+        .mini-col{flex:1}
+        .select-with-button{display:flex;gap:5px;align-items:center}
+        .select-with-button select{flex:1}
+        .btn-dots{width:32px;height:32px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .btn-dots:hover{background:#e2e8f0}
+        .checkbox-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+        .checkbox-item{flex:1;min-width:140px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px}
+        .checkbox-item label{display:flex;align-items:center;gap:6px;font-size:.7rem;text-transform:none;font-weight:500;margin-bottom:6px}
+        .checkbox-item input[type="checkbox"]{width:14px;height:14px;margin:0}
+        .checkbox-item input[type="text"]{margin-top:6px;font-size:.65rem;padding:5px 8px}
+        .hidden{display:none}
+        .button-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+        button{flex:1;min-width:100px;border:none;padding:8px 12px;border-radius:30px;font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+        button:hover{transform:translateY(-1px)}
+        .btn-save{background:#2c7da0;color:#fff}
+        .btn-delete{background:#dc2626;color:#fff}
+        .btn-close{background:#64748b;color:#fff}
+        .btn-search{background:#10b981;color:#fff}
+        .tra-loi-textbox{margin-top:8px}
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#00000080;display:flex;align-items:center;justify-content:center;z-index:1000}
+        .modal-content{background:#fff;border-radius:20px;padding:20px;width:90%;max-width:350px}
+        .modal-content h3{font-size:1rem;margin-bottom:12px;color:#1e2b3c}
+        .modal-buttons{display:flex;gap:10px;margin-top:15px}
+        .modal-buttons button{min-width:auto;padding:8px}
+        .message{margin-top:12px;padding:8px;border-radius:12px;text-align:center;font-size:.7rem;font-weight:500;display:none}
+        .success{background:#dcfce7;color:#166534}
+        .error{background:#fee2e2;color:#991b1b}
+        @media (max-width:768px){body{padding:8px}.mini-row{flex-direction:column}.col{min-width:100%}.stats{justify-content:center}button{padding:6px 10px;font-size:.65rem}.checkbox-item{min-width:100%}}
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="header">
         <h1><i class="fas fa-clipboard-list"></i> SỔ TIẾP NHẬN ĐƠN</h1>
-        <div class="user-info" id="user-info">
-            <i class="fas fa-user-circle"></i> <span id="user-email">Đang tải...</span>
-        </div>
+        <div class="user-info"><i class="fas fa-user-circle"></i> <span id="user-email">Đang tải...</span></div>
     </div>
-
     <div class="stats" id="statsContainer"></div>
-
     <div class="section">
-        <!-- 2 cột trên -->
         <div class="row">
             <div class="col form-box">
                 <div class="mini-row">
-                    <div class="mini-col">
-                        <label>ID</label>
-                        <input type="text" id="id" readonly>
-                    </div>
-                    <div class="mini-col">
-                        <label>Năm nhận</label>
-                        <input type="text" id="namNhanDon" placeholder="2025">
-                    </div>
+                    <div class="mini-col"><label>ID</label><input type="text" id="id" readonly></div>
+                    <div class="mini-col"><label>Năm nhận</label><input type="text" id="namNhanDon" placeholder="2025"></div>
                 </div>
                 <div class="mini-row">
-                    <div class="mini-col">
-                        <label>Ngày nhận</label>
-                        <input type="date" id="ngayNhanDon">
-                    </div>
-                    <div class="mini-col">
-                        <label>Số CCCD</label>
-                        <input type="text" id="cccd" placeholder="Số căn cước">
-                    </div>
+                    <div class="mini-col"><label>Ngày nhận</label><input type="date" id="ngayNhanDon"></div>
+                    <div class="mini-col"><label>Số CCCD</label><input type="text" id="cccd" placeholder="Số căn cước"></div>
                 </div>
                 <div class="mini-row">
-                    <div class="mini-col">
-                        <label>Họ tên khiếu nại</label>
-                        <input type="text" id="hoTen" placeholder="Nguyễn Văn A">
-                    </div>
-                    <div class="mini-col">
-                        <label>Địa chỉ</label>
-                        <input type="text" id="diaChi" placeholder="Địa chỉ...">
-                    </div>
+                    <div class="mini-col"><label>Họ tên khiếu nại</label><input type="text" id="hoTen" placeholder="Nguyễn Văn A"></div>
+                    <div class="mini-col"><label>Địa chỉ</label><input type="text" id="diaChi" placeholder="Địa chỉ..."></div>
                 </div>
             </div>
-
             <div class="col form-box">
                 <div class="mini-row">
-                    <div class="mini-col">
-                        <label>Người nhận đơn</label>
-                        <input type="text" id="nguoiNhan" placeholder="Họ tên">
-                    </div>
-                    <div class="mini-col">
-                        <label>Chức vụ</label>
-                        <input type="text" id="chucVu" placeholder="Chức vụ">
-                    </div>
+                    <div class="mini-col"><label>Người nhận đơn</label><input type="text" id="nguoiNhan" placeholder="Họ tên"></div>
+                    <div class="mini-col"><label>Chức vụ</label><input type="text" id="chucVu" placeholder="Chức vụ"></div>
                 </div>
                 <div class="mini-row">
                     <div class="mini-col">
                         <label>Phân loại</label>
                         <div class="select-with-button">
                             <select id="phanLoai"></select>
-                            <button type="button" class="btn-dots" onclick="openAddLoaiModal()" title="Thêm loại">+</button>
+                            <button type="button" class="btn-dots" onclick="openAddLoaiModal()">+</button>
                         </div>
                     </div>
                     <div class="mini-col">
@@ -453,8 +106,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 2 cột giữa -->
         <div class="row">
             <div class="col form-box">
                 <label>Nội dung khiếu nại</label>
@@ -473,49 +124,34 @@
                 <textarea id="ghiChu" rows="2" placeholder="Ghi chú thêm..."></textarea>
             </div>
         </div>
-
-        <!-- 3 checkbox Thụ lý, Trả đơn, Chuyển đơn - nằm ngang dưới Ghi chú -->
+        <!-- 3 checkbox nằm ngang DƯỚI GHI CHÚ -->
         <div class="checkbox-row">
             <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" id="chkThuLy" onclick="toggleInput('chkThuLy','thuLyText')">
-                    Thụ lý giải quyết
-                </label>
+                <label><input type="checkbox" id="chkThuLy" onclick="toggleInput('chkThuLy','thuLyText')"> Thụ lý giải quyết</label>
                 <input type="text" id="thuLyText" class="hidden" placeholder="Nội dung xử lý...">
             </div>
             <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" id="chkTraDon" onclick="toggleInput('chkTraDon','traDonText')">
-                    Trả đơn
-                </label>
+                <label><input type="checkbox" id="chkTraDon" onclick="toggleInput('chkTraDon','traDonText')"> Trả đơn</label>
                 <input type="text" id="traDonText" class="hidden" placeholder="Lý do trả đơn...">
             </div>
             <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" id="chkChuyenDon" onclick="toggleInput('chkChuyenDon','chuyenDonText')">
-                    Chuyển đơn
-                </label>
+                <label><input type="checkbox" id="chkChuyenDon" onclick="toggleInput('chkChuyenDon','chuyenDonText')"> Chuyển đơn</label>
                 <input type="text" id="chuyenDonText" class="hidden" placeholder="Cơ quan chuyển đến...">
             </div>
         </div>
-
-        <!-- Button -->
         <div class="button-group">
             <button class="btn-save" onclick="saveData()"><i class="fas fa-save"></i> LƯU</button>
             <button class="btn-delete" onclick="clearForm()"><i class="fas fa-trash"></i> XÓA</button>
             <button class="btn-close" onclick="window.location.href='dashboard.html'"><i class="fas fa-times"></i> ĐÓNG</button>
             <button class="btn-search" onclick="window.open('https://vbpl.vn','_blank')"><i class="fas fa-gavel"></i> TRA CỨU</button>
         </div>
-
         <div id="message" class="message"></div>
     </div>
 </div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
     const firebaseConfig = {
         apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
         authDomain: "chamcong-9385e.firebaseapp.com",
@@ -525,15 +161,12 @@
         messagingSenderId: "416187735141",
         appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
-
     let currentUser = null;
     let loaiDonList = [];
     const DEFAULT_LOAIDON = ["Khiếu nại", "Tố cáo", "Kiến nghị", "Phản ảnh", "Tranh chấp"];
-
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
@@ -546,7 +179,6 @@
             window.location.href = "index.html";
         }
     });
-
     async function loadLoaiDon() {
         const snapshot = await get(ref(db, `loaidon/${currentUser.uid}`));
         if (snapshot.exists()) {
@@ -556,11 +188,9 @@
             await set(ref(db, `loaidon/${currentUser.uid}`), loaiDonList);
         }
     }
-
     async function saveLoaiDon() {
         await set(ref(db, `loaidon/${currentUser.uid}`), loaiDonList);
     }
-
     function loadSelectLoaiDon() {
         const select = document.getElementById("phanLoai");
         if (!select) return;
@@ -572,61 +202,42 @@
             select.appendChild(option);
         });
     }
-
     function loadStats() {
         const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
         onValue(dataRef, (snapshot) => {
             let stats = {};
             loaiDonList.forEach(loai => { stats[loai] = 0; });
-
             snapshot.forEach((child) => {
                 const data = child.val();
                 if (stats[data.phanLoai] !== undefined) stats[data.phanLoai]++;
             });
-
             const statsContainer = document.getElementById("statsContainer");
             if (!statsContainer) return;
             statsContainer.innerHTML = "";
-
             loaiDonList.forEach(loai => {
                 const box = document.createElement("div");
                 box.className = "stat-box";
-                box.innerHTML = `
-                    ${loai}<br><span style="font-size:1rem; font-weight:700;">${stats[loai]}</span>
-                    <div class="delete-loai" onclick="window.deleteLoaiDon('${loai.replace(/'/g, "\\'")}')">✕</div>
-                `;
+                box.innerHTML = `${loai}<br><span style="font-size:1rem; font-weight:700;">${stats[loai]}</span>
+                    <div class="delete-loai" onclick="window.deleteLoaiDon('${loai.replace(/'/g, "\\'")}')">✕</div>`;
                 statsContainer.appendChild(box);
             });
         });
     }
-
     window.openAddLoaiModal = function() {
         const modal = document.createElement("div");
         modal.className = "modal";
         modal.id = "addLoaiModal";
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>➕ Thêm loại đơn</h3>
-                <input type="text" id="newLoaiName" placeholder="Tên loại đơn...">
-                <div class="modal-buttons">
-                    <button class="btn-save" onclick="window.addNewLoaiDon()">Thêm</button>
-                    <button class="btn-close" onclick="window.closeModal()">Hủy</button>
-                </div>
-            </div>
-        `;
+        modal.innerHTML = `<div class="modal-content"><h3>➕ Thêm loại đơn</h3><input type="text" id="newLoaiName" placeholder="Tên loại đơn..."><div class="modal-buttons"><button class="btn-save" onclick="window.addNewLoaiDon()">Thêm</button><button class="btn-close" onclick="window.closeModal()">Hủy</button></div></div>`;
         document.body.appendChild(modal);
         document.getElementById("newLoaiName")?.focus();
     }
-
     window.closeModal = function() {
         document.getElementById("addLoaiModal")?.remove();
     }
-
     window.addNewLoaiDon = async function() {
         const newLoai = document.getElementById("newLoaiName").value.trim();
         if (!newLoai) { alert("Vui lòng nhập tên loại đơn!"); return; }
         if (loaiDonList.includes(newLoai)) { alert("Loại đơn này đã tồn tại!"); return; }
-        
         loaiDonList.push(newLoai);
         await saveLoaiDon();
         loadSelectLoaiDon();
@@ -634,20 +245,11 @@
         closeModal();
         showMessage(`✅ Đã thêm: ${newLoai}`, "success");
     }
-
     window.deleteLoaiDon = async function(loai) {
-        if (loaiDonList.length <= 1) {
-            alert("Không thể xóa loại đơn cuối cùng!");
-            return;
-        }
-        
+        if (loaiDonList.length <= 1) { alert("Không thể xóa loại đơn cuối cùng!"); return; }
         const otherLoai = loaiDonList.find(l => l !== loai);
         const newLoai = prompt(`Xóa "${loai}"?\nChọn loại thay thế:`, otherLoai);
-        if (!newLoai || !loaiDonList.includes(newLoai)) {
-            alert("Vui lòng chọn loại đơn hợp lệ!");
-            return;
-        }
-        
+        if (!newLoai || !loaiDonList.includes(newLoai)) { alert("Vui lòng chọn loại đơn hợp lệ!"); return; }
         const snapshot = await get(ref(db, `tiepnhandon/${currentUser.uid}`));
         const updates = {};
         snapshot.forEach((child) => {
@@ -655,11 +257,9 @@
                 updates[`${child.key}/phanLoai`] = newLoai;
             }
         });
-        
         if (Object.keys(updates).length > 0) {
             await update(ref(db, `tiepnhandon/${currentUser.uid}`), updates);
         }
-        
         const index = loaiDonList.indexOf(loai);
         if (index !== -1) loaiDonList.splice(index, 1);
         await saveLoaiDon();
@@ -667,12 +267,10 @@
         loadStats();
         showMessage(`✅ Đã xóa: ${loai}`, "success");
     }
-
     async function loadCounter() {
         const snapshot = await get(ref(db, `counter/${currentUser.uid}`));
         document.getElementById("id").value = snapshot.exists() ? snapshot.val() + 1 : 1;
     }
-
     window.toggleInput = function(checkId, textboxId) {
         const check = document.getElementById(checkId);
         const textbox = document.getElementById(textboxId);
@@ -683,7 +281,6 @@
             textbox.value = "";
         }
     }
-
     window.toggleTraLoi = function() {
         const textboxDiv = document.getElementById("traLoiTextboxDiv");
         if (document.getElementById("traLoi").value === "Văn bản") {
@@ -693,7 +290,6 @@
             document.getElementById("traLoiText").value = "";
         }
     }
-
     window.clearForm = function() {
         if (confirm("Xóa toàn bộ dữ liệu trên form?")) {
             document.querySelectorAll("input:not(#id), textarea, select").forEach(input => {
@@ -708,13 +304,11 @@
             showMessage("🗑️ Đã xóa form", "success");
         }
     }
-
     window.saveData = async function() {
         try {
             const id = document.getElementById("id").value;
             const data = {
-                id: id,
-                namNhanDon: document.getElementById("namNhanDon").value,
+                id, namNhanDon: document.getElementById("namNhanDon").value,
                 ngayNhanDon: document.getElementById("ngayNhanDon").value,
                 hoTen: document.getElementById("hoTen").value,
                 cccd: document.getElementById("cccd").value,
@@ -738,7 +332,6 @@
                 chuyenDonText: document.getElementById("chuyenDonText").value,
                 createdAt: new Date().toISOString()
             };
-
             await set(ref(db, `tiepnhandon/${currentUser.uid}/${id}`), data);
             await set(ref(db, `counter/${currentUser.uid}`), parseInt(id));
             showMessage("✅ Lưu thành công!", "success");
@@ -747,7 +340,6 @@
             showMessage("❌ " + error.message, "error");
         }
     }
-
     function showMessage(text, type) {
         const msg = document.getElementById("message");
         msg.innerText = text;
