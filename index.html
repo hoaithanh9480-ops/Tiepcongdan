@@ -244,25 +244,28 @@
 
         // Theo dõi trạng thái đăng nhập toàn cục
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Đã đăng nhập: cập nhật Dashboard và lưu dữ liệu realtime
-                await saveUserToDatabase(user.uid, user.email); // Cập nhật lastLogin
-                await loadUserProfile(user);
-                dashboardUserEmail.textContent = user.email;
-                dashboardUserId.textContent = user.uid;
-                // Nếu đã đăng nhập thì chuyển sang dashboard
-            if (!window.location.pathname.includes('dashboard.html')) {
-                window.location.href = "dashboard.html";
-                // Nếu đang ở chế độ đăng ký nhưng user đã login -> ẩn đăng ký
-            } else {
-                // Chưa đăng nhập: hiển thị form login
-                loginContainer.style.display = 'block';
-                registerContainer.style.display = 'none';
-                userDashboard.style.display = 'none';
-                // Xóa các message
-                dashboardMessage.style.display = 'none';
-            }
-        });
+
+    if (user) {
+
+        // Đã đăng nhập
+        await saveUserToDatabase(user.uid, user.email);
+
+        // Chuyển sang dashboard.html
+        if (!window.location.pathname.includes('dashboard.html')) {
+            window.location.href = "dashboard.html";
+        }
+
+    } else {
+
+        // Chưa đăng nhập
+        loginContainer.style.display = 'block';
+        registerContainer.style.display = 'none';
+        userDashboard.style.display = 'none';
+
+        dashboardMessage.style.display = 'none';
+    }
+
+});
 
         // Khởi tạo mặc định
         // Đảm bảo realtime database rule gợi ý (người dùng chỉ có thể đọc/ghi dữ liệu của mình)
