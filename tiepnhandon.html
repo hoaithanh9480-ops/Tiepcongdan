@@ -8,7 +8,888 @@
 content="width=device-width, initial-scale=1.0">
 
 <title>SỔ TIẾP NHẬN ĐƠN</title>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
 
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>SỔ TIẾP NHẬN ĐƠN</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Inter,Tahoma,sans-serif;
+    background:#f1f5f9;
+    color:#1e293b;
+}
+
+.header{
+    background:linear-gradient(135deg,#1e3a8a,#2563eb);
+    color:white;
+    text-align:center;
+    padding:16px;
+    font-size:26px;
+    font-weight:700;
+    position:sticky;
+    top:0;
+    z-index:999;
+    box-shadow:0 2px 10px rgba(0,0,0,0.15);
+}
+
+.container{
+    max-width:1300px;
+    margin:auto;
+    padding:12px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.stat-box{
+    background:white;
+    border-radius:12px;
+    padding:12px;
+    text-align:center;
+    font-weight:bold;
+    color:#2563eb;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    font-size:14px;
+}
+
+.section{
+    background:white;
+    border-radius:18px;
+    padding:15px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+}
+
+.row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:12px;
+}
+
+.col{
+    flex:1;
+    min-width:250px;
+}
+
+label{
+    display:block;
+    margin-bottom:5px;
+    font-size:13px;
+    font-weight:600;
+    color:#334155;
+}
+
+input,
+textarea,
+select{
+    width:100%;
+    padding:10px;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    font-size:13px;
+    background:white;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+    outline:none;
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+}
+
+textarea{
+    min-height:80px;
+    resize:vertical;
+}
+
+.two-column{
+    align-items:flex-start;
+}
+
+.form-box{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:12px;
+}
+
+.mini-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.mini-col{
+    flex:1;
+}
+
+.checkbox-group{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+    padding:12px;
+}
+
+.checkbox-group label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.checkbox-group input[type="checkbox"]{
+    width:18px;
+    height:18px;
+}
+
+.hidden{
+    display:none;
+}
+
+.button-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:15px;
+}
+
+button{
+    flex:1;
+    min-width:150px;
+    border:none;
+    padding:12px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+.btn-save{
+    background:#2563eb;
+    color:white;
+}
+
+.btn-close{
+    background:#64748b;
+    color:white;
+}
+
+.btn-search{
+    background:#16a34a;
+    color:white;
+}
+
+.message{
+    margin-top:15px;
+    padding:12px;
+    border-radius:12px;
+    text-align:center;
+    font-weight:bold;
+    display:none;
+}
+
+.success{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.error{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+@media(max-width:768px){
+
+    .mini-row{
+        flex-direction:column;
+    }
+
+    .col{
+        min-width:100%;
+    }
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    button{
+        width:100%;
+    }
+
+    .header{
+        font-size:22px;
+    }
+
+}
+
+</style>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+    getDatabase,
+    ref,
+    set,
+    get,
+    onValue
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
+
+    authDomain: "chamcong-9385e.firebaseapp.com",
+
+    databaseURL:
+    "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+    projectId: "chamcong-9385e",
+
+    storageBucket: "chamcong-9385e.firebasestorage.app",
+
+    messagingSenderId: "416187735141",
+
+    appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getDatabase(app);
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async(user)=>{
+
+    if(user){
+
+        currentUser = user;
+
+        loadCounter();
+
+        loadStats();
+
+    }else{
+
+        window.location.href = "index.html";
+
+    }
+
+});
+
+async function loadCounter(){
+
+    const counterRef =
+    ref(db, `counter/${currentUser.uid}`);
+
+    const snapshot = await get(counterRef);
+
+    let nextId = 1;
+
+    if(snapshot.exists()){
+
+        nextId = snapshot.val() + 1;
+
+    }
+
+    document.getElementById("id").value = nextId;
+
+}
+
+function loadStats(){
+
+    const dataRef =
+    ref(db, `tiepnhandon/${currentUser.uid}`);
+
+    onValue(dataRef,(snapshot)=>{
+
+        let kn = 0;
+        let tc = 0;
+        let knghi = 0;
+        let pa = 0;
+        let tranhchap = 0;
+
+        snapshot.forEach((child)=>{
+
+            const data = child.val();
+
+            switch(data.phanLoai){
+
+                case "Khiếu nại":
+                    kn++;
+                    break;
+
+                case "Tố cáo":
+                    tc++;
+                    break;
+
+                case "Kiến nghị":
+                    knghi++;
+                    break;
+
+                case "Phản ảnh":
+                    pa++;
+                    break;
+
+                case "Tranh chấp":
+                    tranhchap++;
+                    break;
+
+            }
+
+        });
+
+        document.getElementById("kn").innerText = kn;
+        document.getElementById("tc").innerText = tc;
+        document.getElementById("knghi").innerText = knghi;
+        document.getElementById("pa").innerText = pa;
+        document.getElementById("tranhchap").innerText = tranhchap;
+
+    });
+
+}
+
+window.toggleInput = function(checkId,textboxId){
+
+    const check = document.getElementById(checkId);
+
+    const textbox = document.getElementById(textboxId);
+
+    if(check.checked){
+
+        textbox.classList.remove("hidden");
+
+    }else{
+
+        textbox.classList.add("hidden");
+
+        textbox.value = "";
+
+    }
+
+}
+
+window.saveData = async function(){
+
+    try{
+
+        const id =
+        document.getElementById("id").value;
+
+        const data = {
+
+            id:id,
+
+            namNhanDon:
+            document.getElementById("namNhanDon").value,
+
+            ngayNhanDon:
+            document.getElementById("ngayNhanDon").value,
+
+            hoTen:
+            document.getElementById("hoTen").value,
+
+            cccd:
+            document.getElementById("cccd").value,
+
+            diaChi:
+            document.getElementById("diaChi").value,
+
+            nguoiNhan:
+            document.getElementById("nguoiNhan").value,
+
+            chucVu:
+            document.getElementById("chucVu").value,
+
+            phanLoai:
+            document.getElementById("phanLoai").value,
+
+            noiDung:
+            document.getElementById("noiDung").value,
+
+            hoSo:
+            document.getElementById("hoSo").value,
+
+            theoDoi:
+            document.getElementById("theoDoi").value,
+
+            ghiChu:
+            document.getElementById("ghiChu").value,
+
+            coQuan:
+            document.getElementById("coQuan").value,
+
+            ngayTra:
+            document.getElementById("ngayTra").value,
+
+            traLoi:
+            document.getElementById("traLoi").value,
+
+            thuLy:
+            document.getElementById("chkThuLy").checked,
+
+            thuLyText:
+            document.getElementById("thuLyText").value,
+
+            traDon:
+            document.getElementById("chkTraDon").checked,
+
+            traDonText:
+            document.getElementById("traDonText").value,
+
+            chuyenDon:
+            document.getElementById("chkChuyenDon").checked,
+
+            chuyenDonText:
+            document.getElementById("chuyenDonText").value,
+
+            createdAt:
+            new Date().toISOString()
+
+        };
+
+        await set(
+            ref(db,
+            `tiepnhandon/${currentUser.uid}/${id}`),
+            data
+        );
+
+        await set(
+            ref(db,
+            `counter/${currentUser.uid}`),
+            parseInt(id)
+        );
+
+        showMessage(
+            "✅ Lưu dữ liệu thành công",
+            "success"
+        );
+
+        setTimeout(()=>{
+
+            location.reload();
+
+        },1500);
+
+    }catch(error){
+
+        showMessage(
+            "❌ " + error.message,
+            "error"
+        );
+
+    }
+
+}
+
+function showMessage(text,type){
+
+    const msg =
+    document.getElementById("message");
+
+    msg.innerText = text;
+
+    msg.className = "message " + type;
+
+    msg.style.display = "block";
+
+}
+
+</script>
+
+</head>
+
+<body>
+
+<div class="header">
+
+📑 SỔ TIẾP NHẬN ĐƠN
+
+</div>
+
+<div class="container">
+
+<div class="stats">
+
+<div class="stat-box">
+Khiếu nại<br>
+<span id="kn">0</span>
+</div>
+
+<div class="stat-box">
+Tố cáo<br>
+<span id="tc">0</span>
+</div>
+
+<div class="stat-box">
+Kiến nghị<br>
+<span id="knghi">0</span>
+</div>
+
+<div class="stat-box">
+Phản ảnh<br>
+<span id="pa">0</span>
+</div>
+
+<div class="stat-box">
+Tranh chấp<br>
+<span id="tranhchap">0</span>
+</div>
+
+</div>
+
+<div class="section">
+
+<!-- 2 CỘT -->
+
+<div class="row two-column">
+
+<!-- ===================== 2 CỘT THÔNG TIN ===================== -->
+
+<div class="row two-column">
+
+    <!-- CỘT 1 -->
+    <div class="col form-box">
+
+        <!-- DÒNG 1 -->
+        <div class="mini-row">
+
+            <div class="mini-col">
+
+                <label>ID</label>
+
+                <input type="text"
+                id="id"
+                readonly>
+
+            </div>
+
+            <div class="mini-col">
+
+                <label>Năm nhận đơn</label>
+
+                <input type="text"
+                id="namNhanDon">
+
+            </div>
+
+        </div>
+
+        <!-- DÒNG 2 -->
+        <div class="mini-row">
+
+            <div class="mini-col">
+
+                <label>Ngày nhận đơn</label>
+
+                <input type="date"
+                id="ngayNhanDon">
+
+            </div>
+
+            <div class="mini-col">
+
+                <label>Số CCCD</label>
+
+                <input type="text"
+                id="cccd">
+
+            </div>
+
+        </div>
+
+        <!-- DÒNG 3 -->
+        <div class="mini-row">
+
+            <div class="mini-col">
+
+                <label>Họ tên người khiếu nại</label>
+
+                <input type="text"
+                id="hoTen">
+
+            </div>
+
+            <div class="mini-col">
+
+                <label>Địa chỉ</label>
+
+                <textarea id="diaChi"
+                style="min-height:42px;"></textarea>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CỘT 2 -->
+    <div class="col form-box">
+
+        <!-- DÒNG 1 -->
+        <div class="mini-row">
+
+            <div class="mini-col">
+
+                <label>Họ tên người nhận đơn</label>
+
+                <input type="text"
+                id="nguoiNhan">
+
+            </div>
+
+            <div class="mini-col">
+
+                <label>Chức vụ</label>
+
+                <input type="text"
+                id="chucVu">
+
+            </div>
+
+        </div>
+
+        <!-- DÒNG 2 -->
+        <div class="mini-row">
+
+            <div class="mini-col">
+
+                <label>Phân loại đơn</label>
+
+                <select id="phanLoai">
+
+                    <option>Khiếu nại</option>
+                    <option>Tố cáo</option>
+                    <option>Kiến nghị</option>
+                    <option>Phản ảnh</option>
+                    <option>Tranh chấp</option>
+
+                </select>
+
+            </div>
+
+            <div class="mini-col">
+
+                <label>Trả lời</label>
+
+                <select id="traLoi">
+
+                    <option>Trực tiếp</option>
+                    <option>Văn bản</option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+
+<label>Nội dung khiếu nại</label>
+
+<textarea id="noiDung"></textarea>
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+
+<label>Hồ sơ (Tài liệu liên quan)</label>
+
+<textarea id="hoSo"></textarea>
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+
+<label>Theo dõi kết quả giải quyết</label>
+
+<textarea id="theoDoi"></textarea>
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+
+<label>Ghi chú</label>
+
+<textarea id="ghiChu"></textarea>
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+
+<label>Cơ quan giải quyết</label>
+
+<input type="text"
+id="coQuan">
+
+</div>
+
+<div class="col">
+
+<label>Ngày trả kết quả</label>
+
+<input type="date"
+id="ngayTra">
+
+</div>
+
+</div>
+
+<!-- CHECKBOX -->
+
+<div class="row">
+
+<div class="col checkbox-group">
+
+<label>
+
+<input type="checkbox"
+id="chkThuLy"
+onclick="toggleInput('chkThuLy','thuLyText')">
+
+Thụ lý giải quyết
+
+</label>
+
+<input type="text"
+id="thuLyText"
+class="hidden"
+placeholder="Nhập nội dung xử lý...">
+
+</div>
+
+<div class="col checkbox-group">
+
+<label>
+
+<input type="checkbox"
+id="chkTraDon"
+onclick="toggleInput('chkTraDon','traDonText')">
+
+Trả đơn
+
+</label>
+
+<input type="text"
+id="traDonText"
+class="hidden"
+placeholder="Nhập lý do trả đơn...">
+
+</div>
+
+<div class="col checkbox-group">
+
+<label>
+
+<input type="checkbox"
+id="chkChuyenDon"
+onclick="toggleInput('chkChuyenDon','chuyenDonText')">
+
+Chuyển đơn
+
+</label>
+
+<input type="text"
+id="chuyenDonText"
+class="hidden"
+placeholder="Nhập cơ quan chuyển đến...">
+
+</div>
+
+</div>
+
+<!-- BUTTON -->
+
+<div class="button-group">
+
+<button class="btn-save"
+onclick="saveData()">
+
+💾 LƯU
+
+</button>
+
+<button class="btn-close"
+onclick="window.location.href='dashboard.html'">
+
+❌ ĐÓNG
+
+</button>
+
+<button class="btn-search"
+onclick="window.open('https://vbpl.vn','_blank')">
+
+📚 TRA CỨU VĂN BẢN
+
+</button>
+
+</div>
+
+<div id="message"
+class="message"></div>
+
+</div>
+
+</div>
+
+</body>
+</html>
 <style>
 
 *{
