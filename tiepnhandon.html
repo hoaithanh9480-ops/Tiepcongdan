@@ -57,6 +57,31 @@ body{
     color:#2563eb;
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
     font-size:14px;
+    position:relative;
+}
+
+.stat-box .delete-loai{
+    position:absolute;
+    top:5px;
+    right:8px;
+    cursor:pointer;
+    font-size:16px;
+    color:#ef4444;
+    background:white;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    opacity:0.7;
+    transition:0.2s;
+}
+
+.stat-box .delete-loai:hover{
+    opacity:1;
+    background:#fee2e2;
 }
 
 .section{
@@ -129,6 +154,32 @@ textarea{
 
 .mini-col{
     flex:1;
+}
+
+.select-with-button{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.select-with-button select{
+    flex:1;
+}
+
+.btn-dots{
+    width:42px;
+    background:#f1f5f9;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:18px;
+    font-weight:bold;
+    transition:0.2s;
+}
+
+.btn-dots:hover{
+    background:#e2e8f0;
+    transform:scale(1.02);
 }
 
 .checkbox-group{
@@ -214,6 +265,41 @@ button:hover{
     margin-top:10px;
 }
 
+.modal{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+}
+
+.modal-content{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    width:90%;
+    max-width:400px;
+}
+
+.modal-content h3{
+    margin-top:0;
+}
+
+.modal-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+}
+
+.modal-buttons button{
+    flex:1;
+}
+
 @media(max-width:768px){
 
     .mini-row{
@@ -225,7 +311,7 @@ button:hover{
     }
 
     .stats{
-        grid-template-columns:repeat(2,1fr);
+        grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
     }
 
     button{
@@ -256,7 +342,8 @@ import {
     ref,
     set,
     get,
-    onValue
+    onValue,
+    update
 }
 from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -286,12 +373,17 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 let currentUser = null;
+let loaiDonList = ["Khiếu nại", "Tố cáo", "Kiến nghị", "Phản ảnh", "Tranh chấp"];
 
 onAuthStateChanged(auth, async(user)=>{
 
     if(user){
 
         currentUser = user;
+
+        await loadLoaiDon();
+
+        loadSelectLoaiDon();
 
         loadCounter();
 
@@ -305,10 +397,155 @@ onAuthStateChanged(auth, async(user)=>{
 
 });
 
+async function loadLoaiDon(){
+    const loaiDonRef = ref(db, `loaidon/${currentUser.uid}`);
+    const snapshot = await get(loaiDonRef);
+    if(snapshot.exists()){
+        loaiDonList = snapshot.val();
+    }else{
+        await set(loaiDonRef, loaiDonList);
+    }
+}
+
+async function saveLoaiDon(){
+    const loaiDonRef = ref(db, `loaidon/${currentUser.uid}`);
+    await set(loaiDonRef, loaiDonList);
+}
+
+function loadSelectLoaiDon(){
+    const select = document.getElementById("phanLoai");
+    select.innerHTML = "";
+    loaiDonList.forEach(loai => {
+        const option = document.createElement("option");
+        option.value = loai;
+        option.textContent = loai;
+        select.appendChild(option);
+    });
+}
+
+function loadStats(){
+
+    const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
+
+    onValue(dataRef,(snapshot)=>{
+
+        let stats = {};
+        loaiDonList.forEach(loai => {
+            stats[loai] = 0;
+        });
+
+        snapshot.forEach((child)=>{
+
+            const data = child.val();
+            const phanLoai = data.phanLoai;
+            if(stats[phanLoai] !== undefined){
+                stats[phanLoai]++;
+            }
+
+        });
+
+        const statsContainer = document.getElementById("statsContainer");
+        statsContainer.innerHTML = "";
+
+        loaiDonList.forEach(loai => {
+            const box = document.createElement("div");
+            box.className = "stat-box";
+            box.setAttribute("data-loai", loai);
+            box.innerHTML = `
+                ${loai}<br>
+                <span id="stat_${loai.replace(/\s/g, '_')}">${stats[loai]}</span>
+                <div class="delete-loai" onclick="deleteLoaiDon('${loai.replace(/'/g, "\\'")}')" title="Xóa loại này">✕</div>
+            `;
+            statsContainer.appendChild(box);
+        });
+
+    });
+
+}
+
+window.openAddLoaiModal = function(){
+    const modal = document.createElement("div");
+    modal.className = "modal";
+    modal.id = "addLoaiModal";
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Thêm loại đơn mới</h3>
+            <label>Tên loại đơn:</label>
+            <input type="text" id="newLoaiName" placeholder="VD: Đơn thư, Khiếu kiện,...">
+            <div class="modal-buttons">
+                <button class="btn-save" onclick="addNewLoaiDon()">Thêm</button>
+                <button class="btn-close" onclick="closeModal()">Hủy</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+window.closeModal = function(){
+    const modal = document.getElementById("addLoaiModal");
+    if(modal) modal.remove();
+}
+
+window.addNewLoaiDon = async function(){
+    const newLoai = document.getElementById("newLoaiName").value.trim();
+    if(!newLoai){
+        alert("Vui lòng nhập tên loại đơn!");
+        return;
+    }
+    if(loaiDonList.includes(newLoai)){
+        alert("Loại đơn này đã tồn tại!");
+        return;
+    }
+    
+    loaiDonList.push(newLoai);
+    await saveLoaiDon();
+    loadSelectLoaiDon();
+    loadStats();
+    closeModal();
+    showMessage(`✅ Đã thêm loại đơn: ${newLoai}`, "success");
+}
+
+window.deleteLoaiDon = async function(loai){
+    if(loaiDonList.length <= 1){
+        alert("Không thể xóa loại đơn cuối cùng!");
+        return;
+    }
+    
+    if(confirm(`Bạn có chắc muốn xóa loại đơn "${loai}"?\nCác đơn thuộc loại này sẽ không bị mất nhưng sẽ được chuyển sang loại khác.`)){
+        const newLoai = prompt(`Nhập loại đơn mới cho các đơn đang thuộc loại "${loai}":`, loaiDonList.find(l => l !== loai));
+        if(!newLoai || !loaiDonList.includes(newLoai)){
+            alert("Vui lòng chọn loại đơn hợp lệ từ danh sách hiện có!");
+            return;
+        }
+        
+        // Cập nhật tất cả đơn thuộc loại cũ sang loại mới
+        const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
+        const snapshot = await get(dataRef);
+        const updates = {};
+        snapshot.forEach((child) => {
+            const data = child.val();
+            if(data.phanLoai === loai){
+                updates[`${child.key}/phanLoai`] = newLoai;
+            }
+        });
+        
+        if(Object.keys(updates).length > 0){
+            await update(ref(db, `tiepnhandon/${currentUser.uid}`), updates);
+        }
+        
+        // Xóa loại khỏi danh sách
+        const index = loaiDonList.indexOf(loai);
+        if(index !== -1) loaiDonList.splice(index, 1);
+        await saveLoaiDon();
+        loadSelectLoaiDon();
+        loadStats();
+        showMessage(`✅ Đã xóa loại đơn: ${loai}`, "success");
+    }
+}
+
 async function loadCounter(){
 
-    const counterRef =
-    ref(db, `counter/${currentUser.uid}`);
+    const counterRef = ref(db, `counter/${currentUser.uid}`);
 
     const snapshot = await get(counterRef);
 
@@ -321,59 +558,6 @@ async function loadCounter(){
     }
 
     document.getElementById("id").value = nextId;
-
-}
-
-function loadStats(){
-
-    const dataRef =
-    ref(db, `tiepnhandon/${currentUser.uid}`);
-
-    onValue(dataRef,(snapshot)=>{
-
-        let kn = 0;
-        let tc = 0;
-        let knghi = 0;
-        let pa = 0;
-        let tranhchap = 0;
-
-        snapshot.forEach((child)=>{
-
-            const data = child.val();
-
-            switch(data.phanLoai){
-
-                case "Khiếu nại":
-                    kn++;
-                    break;
-
-                case "Tố cáo":
-                    tc++;
-                    break;
-
-                case "Kiến nghị":
-                    knghi++;
-                    break;
-
-                case "Phản ảnh":
-                    pa++;
-                    break;
-
-                case "Tranh chấp":
-                    tranhchap++;
-                    break;
-
-            }
-
-        });
-
-        document.getElementById("kn").innerText = kn;
-        document.getElementById("tc").innerText = tc;
-        document.getElementById("knghi").innerText = knghi;
-        document.getElementById("pa").innerText = pa;
-        document.getElementById("tranhchap").innerText = tranhchap;
-
-    });
 
 }
 
@@ -421,8 +605,7 @@ window.saveData = async function(){
 
     try{
 
-        const id =
-        document.getElementById("id").value;
+        const id = document.getElementById("id").value;
 
         const data = {
 
@@ -544,6 +727,9 @@ function showMessage(text,type){
 
     msg.style.display = "block";
 
+    setTimeout(() => {
+        msg.style.display = "none";
+    }, 3000);
 }
 
 </script>
@@ -560,32 +746,9 @@ function showMessage(text,type){
 
 <div class="container">
 
-<div class="stats">
+<div class="stats" id="statsContainer">
 
-<div class="stat-box">
-Khiếu nại<br>
-<span id="kn">0</span>
-</div>
-
-<div class="stat-box">
-Tố cáo<br>
-<span id="tc">0</span>
-</div>
-
-<div class="stat-box">
-Kiến nghị<br>
-<span id="knghi">0</span>
-</div>
-
-<div class="stat-box">
-Phản ảnh<br>
-<span id="pa">0</span>
-</div>
-
-<div class="stat-box">
-Tranh chấp<br>
-<span id="tranhchap">0</span>
-</div>
+<!-- Các box thống kê sẽ được tạo động bằng JS -->
 
 </div>
 
@@ -696,15 +859,13 @@ id="chucVu">
 
 <label>Phân loại đơn</label>
 
-<select id="phanLoai">
+<div class="select-with-button">
 
-<option>Khiếu nại</option>
-<option>Tố cáo</option>
-<option>Kiến nghị</option>
-<option>Phản ảnh</option>
-<option>Tranh chấp</option>
+<select id="phanLoai"></select>
 
-</select>
+<button type="button" class="btn-dots" onclick="openAddLoaiModal()" title="Thêm loại đơn mới">...</button>
+
+</div>
 
 </div>
 
