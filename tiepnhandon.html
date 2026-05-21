@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>SỔ TIẾP NHẬN ĐƠN</title>
 
@@ -14,7 +17,7 @@
 
 body{
     margin:0;
-    font-family:Inter, Tahoma, sans-serif;
+    font-family:Inter,Tahoma,sans-serif;
     background:#f1f5f9;
     color:#1e293b;
 }
@@ -23,8 +26,8 @@ body{
     background:linear-gradient(135deg,#1e3a8a,#2563eb);
     color:white;
     text-align:center;
-    padding:18px 10px;
-    font-size:28px;
+    padding:16px;
+    font-size:26px;
     font-weight:700;
     position:sticky;
     top:0;
@@ -33,9 +36,9 @@ body{
 }
 
 .container{
-    max-width:1200px;
+    max-width:1300px;
     margin:auto;
-    padding:15px;
+    padding:12px;
 }
 
 .stats{
@@ -47,19 +50,19 @@ body{
 
 .stat-box{
     background:white;
-    border-radius:14px;
-    padding:14px;
+    border-radius:12px;
+    padding:12px;
     text-align:center;
-    font-weight:700;
+    font-weight:bold;
+    color:#2563eb;
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
-    color:#1d4ed8;
     font-size:14px;
 }
 
 .section{
     background:white;
-    border-radius:20px;
-    padding:18px;
+    border-radius:18px;
+    padding:15px;
     box-shadow:0 3px 12px rgba(0,0,0,0.08);
 }
 
@@ -67,7 +70,7 @@ body{
     display:flex;
     flex-wrap:wrap;
     gap:12px;
-    margin-bottom:14px;
+    margin-bottom:12px;
 }
 
 .col{
@@ -78,7 +81,7 @@ body{
 label{
     display:block;
     margin-bottom:5px;
-    font-size:14px;
+    font-size:13px;
     font-weight:600;
     color:#334155;
 }
@@ -87,12 +90,11 @@ input,
 textarea,
 select{
     width:100%;
-    padding:12px;
+    padding:10px;
     border:1px solid #cbd5e1;
-    border-radius:12px;
-    font-size:14px;
-    transition:0.2s;
-    background:#fff;
+    border-radius:10px;
+    font-size:13px;
+    background:white;
 }
 
 input:focus,
@@ -104,22 +106,42 @@ select:focus{
 }
 
 textarea{
-    min-height:90px;
+    min-height:80px;
     resize:vertical;
+}
+
+.two-column{
+    align-items:flex-start;
+}
+
+.form-box{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:12px;
+}
+
+.mini-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.mini-col{
+    flex:1;
 }
 
 .checkbox-group{
     background:#f8fafc;
-    padding:12px;
-    border-radius:12px;
     border:1px solid #e2e8f0;
+    border-radius:12px;
+    padding:12px;
 }
 
 .checkbox-group label{
     display:flex;
     align-items:center;
     gap:8px;
-    margin-bottom:10px;
 }
 
 .checkbox-group input[type="checkbox"]{
@@ -135,17 +157,17 @@ textarea{
     display:flex;
     flex-wrap:wrap;
     gap:10px;
-    margin-top:20px;
+    margin-top:15px;
 }
 
 button{
     flex:1;
-    min-width:140px;
+    min-width:150px;
     border:none;
-    padding:13px;
-    border-radius:14px;
-    font-size:15px;
-    font-weight:700;
+    padding:12px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:bold;
     cursor:pointer;
     transition:0.2s;
 }
@@ -190,30 +212,24 @@ button:hover{
 
 @media(max-width:768px){
 
-    .header{
-        font-size:22px;
-        padding:15px 8px;
-    }
-
-    .container{
-        padding:10px;
-    }
-
-    .section{
-        padding:14px;
-        border-radius:16px;
+    .mini-row{
+        flex-direction:column;
     }
 
     .col{
         min-width:100%;
     }
 
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
     button{
         width:100%;
     }
 
-    .stats{
-        grid-template-columns:repeat(2,1fr);
+    .header{
+        font-size:22px;
     }
 
 }
@@ -222,12 +238,14 @@ button:hover{
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
 import {
     getAuth,
     onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 import {
     getDatabase,
@@ -235,7 +253,8 @@ import {
     set,
     get,
     onValue
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+}
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
 
@@ -243,7 +262,8 @@ const firebaseConfig = {
 
     authDomain: "chamcong-9385e.firebaseapp.com",
 
-    databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    databaseURL:
+    "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
 
     projectId: "chamcong-9385e",
 
@@ -283,7 +303,8 @@ onAuthStateChanged(auth, async(user)=>{
 
 async function loadCounter(){
 
-    const counterRef = ref(db, `counter/${currentUser.uid}`);
+    const counterRef =
+    ref(db, `counter/${currentUser.uid}`);
 
     const snapshot = await get(counterRef);
 
@@ -301,7 +322,8 @@ async function loadCounter(){
 
 function loadStats(){
 
-    const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
+    const dataRef =
+    ref(db, `tiepnhandon/${currentUser.uid}`);
 
     onValue(dataRef,(snapshot)=>{
 
@@ -351,7 +373,7 @@ function loadStats(){
 
 }
 
-window.toggleInput = function(checkId, textboxId){
+window.toggleInput = function(checkId,textboxId){
 
     const check = document.getElementById(checkId);
 
@@ -364,6 +386,7 @@ window.toggleInput = function(checkId, textboxId){
     }else{
 
         textbox.classList.add("hidden");
+
         textbox.value = "";
 
     }
@@ -374,69 +397,97 @@ window.saveData = async function(){
 
     try{
 
-        const id = document.getElementById("id").value;
+        const id =
+        document.getElementById("id").value;
 
         const data = {
 
             id:id,
 
-            namNhanDon: document.getElementById("namNhanDon").value,
+            namNhanDon:
+            document.getElementById("namNhanDon").value,
 
-            ngayNhanDon: document.getElementById("ngayNhanDon").value,
+            ngayNhanDon:
+            document.getElementById("ngayNhanDon").value,
 
-            hoTen: document.getElementById("hoTen").value,
+            hoTen:
+            document.getElementById("hoTen").value,
 
-            cccd: document.getElementById("cccd").value,
+            cccd:
+            document.getElementById("cccd").value,
 
-            diaChi: document.getElementById("diaChi").value,
+            diaChi:
+            document.getElementById("diaChi").value,
 
-            nguoiNhan: document.getElementById("nguoiNhan").value,
+            nguoiNhan:
+            document.getElementById("nguoiNhan").value,
 
-            chucVu: document.getElementById("chucVu").value,
+            chucVu:
+            document.getElementById("chucVu").value,
 
-            phanLoai: document.getElementById("phanLoai").value,
+            phanLoai:
+            document.getElementById("phanLoai").value,
 
-            noiDung: document.getElementById("noiDung").value,
+            noiDung:
+            document.getElementById("noiDung").value,
 
-            hoSo: document.getElementById("hoSo").value,
+            hoSo:
+            document.getElementById("hoSo").value,
 
-            theoDoi: document.getElementById("theoDoi").value,
+            theoDoi:
+            document.getElementById("theoDoi").value,
 
-            ghiChu: document.getElementById("ghiChu").value,
+            ghiChu:
+            document.getElementById("ghiChu").value,
 
-            coQuan: document.getElementById("coQuan").value,
+            coQuan:
+            document.getElementById("coQuan").value,
 
-            ngayTra: document.getElementById("ngayTra").value,
+            ngayTra:
+            document.getElementById("ngayTra").value,
 
-            traLoi: document.getElementById("traLoi").value,
+            traLoi:
+            document.getElementById("traLoi").value,
 
-            thuLy: document.getElementById("chkThuLy").checked,
+            thuLy:
+            document.getElementById("chkThuLy").checked,
 
-            thuLyText: document.getElementById("thuLyText").value,
+            thuLyText:
+            document.getElementById("thuLyText").value,
 
-            traDon: document.getElementById("chkTraDon").checked,
+            traDon:
+            document.getElementById("chkTraDon").checked,
 
-            traDonText: document.getElementById("traDonText").value,
+            traDonText:
+            document.getElementById("traDonText").value,
 
-            chuyenDon: document.getElementById("chkChuyenDon").checked,
+            chuyenDon:
+            document.getElementById("chkChuyenDon").checked,
 
-            chuyenDonText: document.getElementById("chuyenDonText").value,
+            chuyenDonText:
+            document.getElementById("chuyenDonText").value,
 
-            createdAt: new Date().toISOString()
+            createdAt:
+            new Date().toISOString()
 
         };
 
         await set(
-            ref(db, `tiepnhandon/${currentUser.uid}/${id}`),
+            ref(db,
+            `tiepnhandon/${currentUser.uid}/${id}`),
             data
         );
 
         await set(
-            ref(db, `counter/${currentUser.uid}`),
+            ref(db,
+            `counter/${currentUser.uid}`),
             parseInt(id)
         );
 
-        showMessage("✅ Lưu dữ liệu thành công","success");
+        showMessage(
+            "✅ Lưu dữ liệu thành công",
+            "success"
+        );
 
         setTimeout(()=>{
 
@@ -446,7 +497,10 @@ window.saveData = async function(){
 
     }catch(error){
 
-        showMessage("❌ Lỗi: " + error.message,"error");
+        showMessage(
+            "❌ " + error.message,
+            "error"
+        );
 
     }
 
@@ -454,7 +508,8 @@ window.saveData = async function(){
 
 function showMessage(text,type){
 
-    const msg = document.getElementById("message");
+    const msg =
+    document.getElementById("message");
 
     msg.innerText = text;
 
@@ -509,53 +564,130 @@ Tranh chấp<br>
 
 <div class="section">
 
-<div class="row">
+<!-- 2 CỘT -->
 
-<div class="col">
+<div class="row two-column">
+
+<!-- CỘT 1 -->
+
+<div class="col form-box">
+
+<div class="mini-row">
+
+<div class="mini-col">
 
 <label>ID</label>
 
-<input type="text" id="id" readonly>
+<input type="text"
+id="id"
+readonly>
 
 </div>
 
-<div class="col">
+<div class="mini-col">
 
 <label>Năm nhận đơn</label>
 
-<input type="text" id="namNhanDon">
+<input type="text"
+id="namNhanDon">
 
 </div>
 
-<div class="col">
+</div>
+
+<div class="mini-row">
+
+<div class="mini-col">
 
 <label>Ngày nhận đơn</label>
 
-<input type="date" id="ngayNhanDon">
+<input type="date"
+id="ngayNhanDon">
 
 </div>
 
-</div>
-
-<div class="row">
-
-<div class="col">
-
-<label>Họ tên người khiếu nại</label>
-
-<input type="text" id="hoTen">
-
-</div>
-
-<div class="col">
+<div class="mini-col">
 
 <label>Số CCCD</label>
 
-<input type="text" id="cccd">
+<input type="text"
+id="cccd">
 
 </div>
 
 </div>
+
+<label>Họ tên người khiếu nại</label>
+
+<input type="text"
+id="hoTen">
+
+</div>
+
+<!-- CỘT 2 -->
+
+<div class="col form-box">
+
+<div class="mini-row">
+
+<div class="mini-col">
+
+<label>Họ tên người nhận đơn</label>
+
+<input type="text"
+id="nguoiNhan">
+
+</div>
+
+<div class="mini-col">
+
+<label>Chức vụ</label>
+
+<input type="text"
+id="chucVu">
+
+</div>
+
+</div>
+
+<div class="mini-row">
+
+<div class="mini-col">
+
+<label>Phân loại đơn</label>
+
+<select id="phanLoai">
+
+<option>Khiếu nại</option>
+<option>Tố cáo</option>
+<option>Kiến nghị</option>
+<option>Phản ảnh</option>
+<option>Tranh chấp</option>
+
+</select>
+
+</div>
+
+<div class="mini-col">
+
+<label>Trả lời</label>
+
+<select id="traLoi">
+
+<option>Trực tiếp</option>
+<option>Văn bản</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- THÔNG TIN -->
 
 <div class="row">
 
@@ -564,64 +696,6 @@ Tranh chấp<br>
 <label>Địa chỉ</label>
 
 <textarea id="diaChi"></textarea>
-
-</div>
-
-</div>
-
-<div class="row">
-
-<div class="col">
-
-<label>Họ tên người nhận đơn</label>
-
-<input type="text" id="nguoiNhan">
-
-</div>
-
-<div class="col">
-
-<label>Chức vụ</label>
-
-<input type="text" id="chucVu">
-
-</div>
-
-</div>
-
-<div class="row">
-
-<div class="col">
-
-<label>Phân loại đơn</label>
-
-<select id="phanLoai">
-
-<option>Khiếu nại</option>
-
-<option>Tố cáo</option>
-
-<option>Kiến nghị</option>
-
-<option>Phản ảnh</option>
-
-<option>Tranh chấp</option>
-
-</select>
-
-</div>
-
-<div class="col">
-
-<label>Trả lời</label>
-
-<select id="traLoi">
-
-<option>Trực tiếp</option>
-
-<option>Văn bản</option>
-
-</select>
 
 </div>
 
@@ -681,7 +755,8 @@ Tranh chấp<br>
 
 <label>Cơ quan giải quyết</label>
 
-<input type="text" id="coQuan">
+<input type="text"
+id="coQuan">
 
 </div>
 
@@ -689,11 +764,14 @@ Tranh chấp<br>
 
 <label>Ngày trả kết quả</label>
 
-<input type="date" id="ngayTra">
+<input type="date"
+id="ngayTra">
 
 </div>
 
 </div>
+
+<!-- CHECKBOX -->
 
 <div class="row">
 
@@ -756,6 +834,8 @@ placeholder="Nhập cơ quan chuyển đến...">
 
 </div>
 
+<!-- BUTTON -->
+
 <div class="button-group">
 
 <button class="btn-save"
@@ -781,7 +861,8 @@ onclick="window.open('https://vbpl.vn','_blank')">
 
 </div>
 
-<div id="message" class="message"></div>
+<div id="message"
+class="message"></div>
 
 </div>
 
