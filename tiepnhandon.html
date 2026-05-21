@@ -19,7 +19,6 @@
             padding: 16px;
         }
 
-        /* Header nhỏ gọn */
         .header {
             background: linear-gradient(135deg, #1e2b3c 0%, #0f212f 100%);
             color: white;
@@ -64,7 +63,6 @@
             margin: 0 auto;
         }
 
-        /* Stats nhỏ gọn */
         .stats {
             display: flex;
             flex-wrap: wrap;
@@ -107,7 +105,6 @@
             background: #fee2e2;
         }
 
-        /* Section chính */
         .section {
             background: white;
             border-radius: 16px;
@@ -225,11 +222,49 @@
             margin: 0;
         }
 
+        /* 3 checkbox nằm ngang */
+        .checkbox-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            flex: 1;
+            min-width: 140px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+        
+        .checkbox-item label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            text-transform: none;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+        }
+        
+        .checkbox-item input[type="text"] {
+            margin-top: 6px;
+            font-size: 0.65rem;
+            padding: 5px 8px;
+        }
+
         .hidden {
             display: none;
         }
 
-        /* Button nhóm nhỏ gọn */
         .button-group {
             display: flex;
             flex-wrap: wrap;
@@ -266,7 +301,6 @@
             margin-top: 8px;
         }
 
-        /* Modal */
         .modal {
             position: fixed;
             top: 0;
@@ -309,7 +343,6 @@
             padding: 8px;
         }
 
-        /* Message */
         .message {
             margin-top: 12px;
             padding: 8px;
@@ -336,6 +369,7 @@
             .col { min-width: 100%; }
             .stats { justify-content: center; }
             button { padding: 6px 10px; font-size: 0.65rem; }
+            .checkbox-item { min-width: 100%; }
         }
     </style>
 </head>
@@ -377,12 +411,11 @@
                 </div>
                 <div class="mini-row">
                     <div class="mini-col">
-                        <label>Họ tên người khiếu nại</label>
+                        <label>Họ tên khiếu nại</label>
                         <input type="text" id="hoTen" placeholder="Nguyễn Văn A">
                     </div>
                     <div class="mini-col">
                         <label>Địa chỉ</label>
-                       <!-- <textarea id="diaChi" rows="1" placeholder="Địa chỉ..."></textarea> -->
                         <input type="text" id="diaChi" placeholder="Địa chỉ...">
                     </div>
                 </div>
@@ -441,23 +474,23 @@
             </div>
         </div>
 
-        <!-- Checkbox -->
-        <div class="row">
-            <div class="col checkbox-group">
+        <!-- 3 checkbox Thụ lý, Trả đơn, Chuyển đơn - nằm ngang dưới Ghi chú -->
+        <div class="checkbox-row">
+            <div class="checkbox-item">
                 <label>
                     <input type="checkbox" id="chkThuLy" onclick="toggleInput('chkThuLy','thuLyText')">
                     Thụ lý giải quyết
                 </label>
                 <input type="text" id="thuLyText" class="hidden" placeholder="Nội dung xử lý...">
             </div>
-            <div class="col checkbox-group">
+            <div class="checkbox-item">
                 <label>
                     <input type="checkbox" id="chkTraDon" onclick="toggleInput('chkTraDon','traDonText')">
                     Trả đơn
                 </label>
                 <input type="text" id="traDonText" class="hidden" placeholder="Lý do trả đơn...">
             </div>
-            <div class="col checkbox-group">
+            <div class="checkbox-item">
                 <label>
                     <input type="checkbox" id="chkChuyenDon" onclick="toggleInput('chkChuyenDon','chuyenDonText')">
                     Chuyển đơn
