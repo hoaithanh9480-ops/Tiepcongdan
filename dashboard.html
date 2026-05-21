@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Quản lý tiếp nhận đơn | Dashboard</title>
+    <!-- Font Awesome 6 (Free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #eef2f9;
+            min-height: 100vh;
+            padding: 24px 20px;
+        }
+
+        /* Container chính */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* Header với ngày tháng và nút */
+        .header-bar {
+            background: linear-gradient(135deg, #1e2b3c 0%, #0f212f 100%);
+            padding: 20px 28px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d4a6e;
+        }
+
+        .title-section h1 {
+            color: white;
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .title-section h1 i {
+            background: #ff9800;
+            padding: 8px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            color: #1e2b3c;
+        }
+
+        .date-location {
+            color: #cbd5e1;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        .right-header {
+            text-align: right;
+        }
+
+        .datetime-large {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+            font-family: monospace;
+        }
+
+        .date-text {
+            color: #a0c4e2;
+            font-size: 0.9rem;
+        }
+
+        /* Thanh điều khiển chính 3 nút */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 28px 28px 20px 28px;
+            background: #ffffff;
+            border-bottom: 1px solid #e9edf2;
+        }
+
+        .btn-action {
+            flex: 1;
+            min-width: 180px;
+            background: #f0f4fa;
+            border: none;
+            padding: 16px 12px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1f2a44;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .btn-action i {
+            font-size: 1.4rem;
+        }
+
+        .btn-action:first-child {
+            background: #2c7da0;
+            color: white;
+            box-shadow: 0 8px 18px -8px #2c7da080;
+        }
+
+        .btn-action:first-child:hover {
+            background: #1f6390;
+            transform: translateY(-2px);
+        }
+
+        .btn-action:nth-child(2) {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-action:nth-child(2):hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        .btn-action:nth-child(3) {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-action:nth-child(3):hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        /* Bảng danh sách đơn */
+        .orders-section {
+            padding: 20px 28px 32px 28px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #0f172a;
+            border-left: 5px solid #ff9800;
+            padding-left: 16px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid #eef2f6;
+            background: #fff;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .order-table th {
+            background: #f8fafc;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .order-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        .order-table tr:hover {
+            background: #fefce8;
+        }
+
+        .badge-status {
+            background: #e6f7e6;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        /* Form thêm / sửa đơn (modal đẹp) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: white;
+            max-width: 500px;
+            width: 90%;
+            border-radius: 36px;
+            padding: 28px 26px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-card h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #0f172a;
+        }
+
+        .modal-card input, .modal-card textarea {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 12px 0;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 28px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: #f9fbfd;
+        }
+
+        .modal-card input:focus, .modal-card textarea:focus {
+            outline: none;
+            border-color: #2c7da0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: #2c7da0;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        /* thông báo */
+        .toast-msg {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            z-index: 1100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 780px) {
+            .header-bar {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+            .right-header {
+                text-align: center;
+            }
+            .datetime-large {
+                font-size: 1.5rem;
+            }
+            .btn-action {
+                font-size: 0.9rem;
+                padding: 12px 8px;
+            }
+        }
+        .user-info-tag {
+            background: #2d4a6e40;
+            border-radius: 30px;
+            padding: 5px 12px;
+            font-size: 0.7rem;
+            color: #e2e8f0;
+            display: inline-block;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Header: ngày tháng, nơi nhận -->
+    <div class="header-bar">
+        <div class="title-section">
+            <h1><i class="fas fa-clipboard-list"></i> QUẢN LÝ TIẾP NHẬN ĐƠN</h1>
+            <div class="date-location">
+                <i class="fas fa-map-marker-alt"></i> Ninh Kiều, 
+                <span id="current-location-date">Ngày 21 tháng 05 năm 2026</span>
+            </div>
+            <div class="user-info-tag" id="user-email-display">
+                <i class="fas fa-user-circle"></i> <span>Đang tải...</span>
+            </div>
+        </div>
+        <div class="right-header">
+            <div class="datetime-large" id="live-clock">10:14</div>
+            <div class="date-text" id="full-date-text">Thứ Năm, 21/05/2026</div>
+        </div>
+    </div>
+
+    <!-- 3 nút chức năng chính: TIẾP NHẬN ĐƠN, THOÁT, TÌM NỘI DUNG ĐƠN -->
+    <div class="action-buttons">
+        <button class="btn-action" id="add-order-btn"><i class="fas fa-plus-circle"></i> TIẾP NHẬN ĐƠN</button>
+        <button class="btn-action" id="logout-btn-nav"><i class="fas fa-sign-out-alt"></i> THOÁT</button>
+        <button class="btn-action" id="search-order-btn"><i class="fas fa-search"></i> TÌM NỘI DUNG ĐƠN</button>
+    </div>
+
+    <!-- Danh sách đơn hàng đã tiếp nhận -->
+    <div class="orders-section">
+        <div class="section-title">
+            <i class="fas fa-receipt"></i> Danh sách đơn đã tiếp nhận
+        </div>
+        <div class="table-wrapper">
+            <table class="order-table" id="order-table">
+                <thead>
+                    <tr><th>Mã đơn</th><th>Khách hàng</th><th>Nội dung đơn</th><th>Ngày tiếp nhận</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                </thead>
+                <tbody id="order-table-body">
+                    <tr class="empty-row"><td colspan="6">Chưa có đơn nào. Nhấn "Tiếp nhận đơn" để thêm.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm/sửa đơn -->
+<div id="orderModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 id="modal-title">Tiếp nhận đơn mới</h3>
+        <input type="text" id="customer-name" placeholder="Tên khách hàng *" autocomplete="off">
+        <textarea id="order-content" rows="3" placeholder="Nội dung đơn / mô tả chi tiết ..."></textarea>
+        <input type="text" id="order-status" placeholder="Trạng thái (VD: Đang xử lý, Hoàn thành)" value="Đang xử lý">
+        <div class="modal-actions">
+            <button class="btn-save" id="saveOrderBtn">Lưu đơn</button>
+            <button class="btn-cancel" id="closeModalBtn">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tìm kiếm nội dung đơn -->
+<div id="searchModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3><i class="fas fa-search"></i> Tìm kiếm đơn</h3>
+        <input type="text" id="search-keyword" placeholder="Nhập nội dung hoặc tên khách hàng..." autocomplete="off">
+        <div class="modal-actions">
+            <button class="btn-save" id="doSearchBtn">Tìm kiếm</button>
+            <button class="btn-cancel" id="closeSearchBtn">Đóng</button>
+        </div>
+        <div id="search-result-area" style="margin-top: 16px; font-size: 0.8rem; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<div id="toastMsg" class="toast-msg"></div>
+
+<!-- Import Firebase và logic -->
+<script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, remove, update, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // Firebase Config (giống file index)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
+        authDomain: "chamcong-9385e.firebaseapp.com",
+        databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "chamcong-9385e",
+        storageBucket: "chamcong-9385e.firebasestorage.app",
+        messagingSenderId: "416187735141",
+        appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    
+    // Biến toàn cục
+    let currentUser = null;
+    let ordersRef = null;         // reference đến node orders/${userId}
+    let allOrders = [];           // lưu tạm danh sách đơn
+    
+    // DOM elements
+    const orderTableBody = document.getElementById('order-table-body');
+    const addBtn = document.getElementById('add-order-btn');
+    const logoutBtn = document.getElementById('logout-btn-nav');
+    const searchBtn = document.getElementById('search-order-btn');
+    const modal = document.getElementById('orderModal');
+    const searchModal = document.getElementById('searchModal');
+    const saveOrderBtn = document.getElementById('saveOrderBtn');
+    const closeModal = document.getElementById('closeModalBtn');
+    const closeSearch = document.getElementById('closeSearchBtn');
+    const doSearch = document.getElementById('doSearchBtn');
+    const modalTitle = document.getElementById('modal-title');
+    const customerNameInput = document.getElementById('customer-name');
+    const orderContentInput = document.getElementById('order-content');
+    const orderStatusInput = document.getElementById('order-status');
+    const searchKeyword = document.getElementById('search-keyword');
+    const searchResultArea = document.getElementById('search-result-area');
+    const userEmailSpan = document.querySelector('#user-email-display span');
+    
+    let editingOrderId = null; // null: thêm mới, != null: đang sửa
+    
+    // Helper toast
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toastMsg');
+        toast.style.backgroundColor = isError ? '#dc2626' : '#2c7da0';
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2500);
+    }
+    
+    // Render bảng đơn
+    function renderOrders(ordersArray) {
+        if (!ordersArray || ordersArray.length === 0) {
+            orderTableBody.innerHTML = '<tr class="empty-row"><td colspan="6">📭 Chưa có đơn nào. Nhấn "Tiếp nhận đơn" để thêm.</td></tr>';
+            return;
+        }
+        let html = '';
+        ordersArray.forEach(order => {
+            html += `
+                <tr>
+                    <td><strong>#${order.id.slice(0,6)}</strong></td>
+                    <td>${escapeHtml(order.customerName)}</td>
+                    <td>${escapeHtml(order.content.substring(0, 60))}${order.content.length > 60 ? '…' : ''}</td>
+                    <td>${order.date}</td>
+                    <td><span class="badge-status">${escapeHtml(order.status)}</span></td>
+                    <td>
+                        <button class="edit-order" data-id="${order.id}" style="background:#eef2ff; border:none; border-radius:30px; padding:6px 12px; margin-right:6px; cursor:pointer;"><i class="fas fa-edit"></i> Sửa</button>
+                        <button class="delete-order" data-id="${order.id}" style="background:#fee2e2; border:none; border-radius:30px; padding:6px 12px; cursor:pointer;"><i class="fas fa-trash"></i> Xóa</button>
+                    </td>
+                </tr>
+            `;
+        });
+        orderTableBody.innerHTML = html;
+        
+        // gán sự kiện cho edit, delete
+        document.querySelectorAll('.edit-order').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = btn.getAttribute('data-id');
+                const order = allOrders.find(o => o.id === id);
+                if (order) openEditModal(order);
+            });
+        });
+        document.querySelectorAll('.delete-order').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Xóa đơn này?')) {
+                    await remove(ref(db, `orders/${currentUser.uid}/${id}`));
+                    showToast('Đã xóa đơn');
+                }
+            });
+        });
+    }
+    
+    // simple escape
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Lắng nghe realtime dữ liệu đơn hàng theo user
+    function subscribeOrders(userId) {
+        if (ordersRef) {
+            // remove cũ nếu có
+        }
+        const userOrdersRef = ref(db, `orders/${userId}`);
+        ordersRef = userOrdersRef;
+        onValue(userOrdersRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const ordersList = Object.entries(data).map(([key, value]) => ({
+                    id: key,
+                    customerName: value.customerName || '',
+                    content: value.content || '',
+                    date: value.date || new Date().toLocaleString(),
+                    status: value.status || 'Đang xử lý'
+                }));
+                allOrders = ordersList.sort((a,b) => b.date.localeCompare(a.date));
+                renderOrders(allOrders);
+            } else {
+                allOrders = [];
+                renderOrders([]);
+            }
+        });
+    }
+    
+    // Thêm mới hoặc cập nhật đơn
+    async function saveOrder(orderData, orderId = null) {
+        if (!currentUser) return;
+        const userId = currentUser.uid;
+        const ordersPath = `orders/${userId}`;
+        if (orderId) {
+            // update
+            await update(ref(db, `${ordersPath}/${orderId}`), orderData);
+            showToast('Cập nhật đơn thành công');
+        } else {
+            // push mới
+            const newOrderRef = push(ref(db, ordersPath));
+            await set(newOrderRef, orderData);
+            showToast('Tiếp nhận đơn thành công');
+        }
+        closeModalWindow();
+    }
+    
+    function openAddModal() {
+        editingOrderId = null;
+        modalTitle.innerText = 'Tiếp nhận đơn mới';
+        customerNameInput.value = '';
+        orderContentInput.value = '';
+        orderStatusInput.value = 'Đang xử lý';
+        modal.classList.add('active');
+    }
+    
+    function openEditModal(order) {
+        editingOrderId = order.id;
+        modalTitle.innerText = 'Chỉnh sửa đơn';
+        customerNameInput.value = order.customerName;
+        orderContentInput.value = order.content;
+        orderStatusInput.value = order.status;
+        modal.classList.add('active');
+    }
+    
+    function closeModalWindow() {
+        modal.classList.remove('active');
+        editingOrderId = null;
+    }
+    
+    function closeSearchModal() {
+        searchModal.classList.remove('active');
+        searchKeyword.value = '';
+        searchResultArea.innerHTML = '';
+    }
+    
+    // Hàm tìm kiếm đơn theo nội dung
+    function performSearch() {
+        const keyword = searchKeyword.value.trim().toLowerCase();
+        if (!keyword) {
+            searchResultArea.innerHTML = '<div style="color:gray;">🔍 Nhập từ khóa tìm kiếm theo nội dung hoặc tên khách hàng</div>';
+            return;
+        }
+        const results = allOrders.filter(order => 
+            order.content.toLowerCase().includes(keyword) || 
+            order.customerName.toLowerCase().includes(keyword)
+        );
+        if (results.length === 0) {
+            searchResultArea.innerHTML = '<div>❌ Không tìm thấy đơn nào phù hợp.</div>';
+        } else {
+            let resHtml = `<ul style="list-style:none; padding-left:0;">`;
+            results.forEach(r => {
+                resHtml += `<li style="margin-bottom:12px; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">
+                    <strong>📌 ${escapeHtml(r.customerName)}</strong><br>
+                    📝 Nội dung: ${escapeHtml(r.content.substring(0,80))}<br>
+                    🕒 ${r.date} | 🔖 ${r.status}
+                </li>`;
+            });
+            resHtml += `</ul><div style="margin-top:8px;"><small>Tìm thấy ${results.length} kết quả</small></div>`;
+            searchResultArea.innerHTML = resHtml;
+        }
+    }
+    
+    // Xử lý thoát: signOut về login
+    async function handleLogout() {
+        try {
+            await signOut(auth);
+            window.location.href = "index.html";  // chuyển về trang đăng nhập (index)
+        } catch (err) {
+            showToast("Lỗi đăng xuất: " + err.message, true);
+        }
+    }
+    
+    // Kiểm tra đăng nhập & set user
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            if (userEmailSpan) userEmailSpan.innerText = user.email;
+            // load dữ liệu đơn hàng realtime theo userId
+            subscribeOrders(user.uid);
+        } else {
+            // Chưa đăng nhập -> quay về trang login
+            window.location.href = "index.html";
+        }
+    });
+    
+    // Cập nhật đồng hồ & ngày
+    function updateClockAndDate() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2,'0');
+        const minutes = now.getMinutes().toString().padStart(2,'0');
+        document.getElementById('live-clock').innerText = `${hours}:${minutes}`;
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const fullDate = now.toLocaleDateString('vi-VN', { year:'numeric', month:'long', day:'numeric' });
+        document.getElementById('full-date-text').innerHTML = now.toLocaleDateString('vi-VN', { weekday:'long' }) + ', ' + fullDate;
+        document.getElementById('current-location-date').innerHTML = `Ninh Kiều, ${fullDate}`;
+    }
+    updateClockAndDate();
+    setInterval(updateClockAndDate, 60000);
+    
+    // Sự kiện
+    addBtn.addEventListener('click', openAddModal);
+    logoutBtn.addEventListener('click', handleLogout);
+    searchBtn.addEventListener('click', () => {
+        searchModal.classList.add('active');
+        searchKeyword.value = '';
+        searchResultArea.innerHTML = '';
+    });
+    saveOrderBtn.addEventListener('click', async () => {
+        const customer = customerNameInput.value.trim();
+        const content = orderContentInput.value.trim();
+        if (!customer || !content) {
+            showToast('Vui lòng nhập tên khách hàng và nội dung đơn', true);
+            return;
+        }
+        const now = new Date().toLocaleString('vi-VN');
+        const orderData = {
+            customerName: customer,
+            content: content,
+            status: orderStatusInput.value.trim() || 'Đang xử lý',
+            date: now,
+            lastUpdated: new Date().toISOString()
+        };
+        await saveOrder(orderData, editingOrderId);
+    });
+    closeModal.addEventListener('click', closeModalWindow);
+    closeSearch.addEventListener('click', closeSearchModal);
+    doSearch.addEventListener('click', performSearch);
+    // Click outside modal để đóng
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModalWindow();
+        if (e.target === searchModal) closeSearchModal();
+    });
+    // Xử lý nếu không có user thì redirect (bảo vệ)
+    setTimeout(() => {
+        if (!currentUser && window.location.pathname.includes('dashboard.html')) {
+            window.location.href = "index.html";
+        }
+    }, 500);
+</script>
+</body>
+</html>
