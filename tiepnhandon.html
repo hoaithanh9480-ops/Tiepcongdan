@@ -3,98 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sổ tiếp nhận đơn</title>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import {
-    getAuth,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-import {
-    getDatabase,
-    ref,
-    push,
-    set,
-    get
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
-    authDomain: "chamcong-9385e.firebaseapp.com",
-    databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "chamcong-9385e",
-    storageBucket: "chamcong-9385e.firebasestorage.app",
-    messagingSenderId: "416187735141",
-    appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-let currentUser = null;
-
-onAuthStateChanged(auth, async(user) => {
-
-    if(user){
-
-        currentUser = user;
-
-        const counterRef = ref(db, `counter/${user.uid}`);
-
-        const snapshot = await get(counterRef);
-
-        let nextId = 1;
-
-        if(snapshot.exists()){
-            nextId = snapshot.val() + 1;
-        }
-
-        document.getElementById("id").value = nextId;
-
-    }else{
-        window.location.href = "index.html";
-    }
-
-});
-
-window.saveData = async function(){
-
-    if(!currentUser){
-        alert("Chưa đăng nhập");
-        return;
-    }
-
-    const id = document.getElementById("id").value;
-
-    const data = {
-        id: id,
-        nam: document.getElementById("nam").value,
-        ngayNhan: document.getElementById("ngayNhan").value,
-        hoTen: document.getElementById("hoTen").value,
-        cmnd: document.getElementById("cmnd").value,
-        noiDung: document.getElementById("noiDung").value,
-        ghiChu: document.getElementById("ghiChu").value,
-        createdAt: new Date().toISOString()
-    };
-
-    await set(
-        ref(db, `tiepnhandon/${currentUser.uid}/${id}`),
-        data
-    );
-
-    await set(
-        ref(db, `counter/${currentUser.uid}`),
-        parseInt(id)
-    );
-
-    alert("Lưu thành công");
-}
-
-</script>
+<title>SỔ TIẾP NHẬN ĐƠN</title>
 
 <style>
 
@@ -115,46 +25,272 @@ body{
 }
 
 .container{
-    padding:20px;
+    padding:15px;
 }
 
 .row{
     display:flex;
-    margin-bottom:10px;
     gap:10px;
+    margin-bottom:10px;
+    align-items:center;
 }
 
 label{
-    width:150px;
     font-weight:bold;
+    min-width:170px;
 }
 
-input, textarea{
-    flex:1;
+input, textarea, select{
     padding:8px;
     border:none;
+    width:100%;
+    box-sizing:border-box;
 }
 
 textarea{
-    height:100px;
+    height:90px;
+    resize:vertical;
+}
+
+.col{
+    flex:1;
 }
 
 button{
-    background:#2b6de0;
+    background:#2d6cdf;
     color:white;
     border:none;
-    padding:12px 25px;
-    margin-right:10px;
+    padding:12px 20px;
     cursor:pointer;
-    font-weight:bold;
     border-radius:5px;
+    font-weight:bold;
 }
 
 button:hover{
-    background:#1f4fa5;
+    background:#1f52aa;
+}
+
+.stats{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    margin-bottom:15px;
+}
+
+.stat-box{
+    background:white;
+    color:#8b3f00;
+    padding:10px 15px;
+    border-radius:5px;
+    font-weight:bold;
+}
+
+.hidden{
+    display:none;
+}
+
+.section{
+    border:1px solid #cfcfcf;
+    padding:10px;
+    margin-bottom:15px;
 }
 
 </style>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+    getDatabase,
+    ref,
+    set,
+    get,
+    onValue
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
+    authDomain: "chamcong-9385e.firebaseapp.com",
+    databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "chamcong-9385e",
+    storageBucket: "chamcong-9385e.firebasestorage.app",
+    messagingSenderId: "416187735141",
+    appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async(user)=>{
+
+    if(user){
+
+        currentUser = user;
+
+        loadCounter();
+
+        loadStats();
+
+    }else{
+        window.location.href = "index.html";
+    }
+
+});
+
+async function loadCounter(){
+
+    const counterRef = ref(db, `counter/${currentUser.uid}`);
+
+    const snapshot = await get(counterRef);
+
+    let nextId = 1;
+
+    if(snapshot.exists()){
+        nextId = snapshot.val() + 1;
+    }
+
+    document.getElementById("id").value = nextId;
+}
+
+function loadStats(){
+
+    const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
+
+    onValue(dataRef,(snapshot)=>{
+
+        let kn = 0;
+        let tc = 0;
+        let knn = 0;
+        let pa = 0;
+        let tranhchap = 0;
+
+        snapshot.forEach((child)=>{
+
+            const data = child.val();
+
+            switch(data.phanLoai){
+
+                case "Khiếu nại":
+                    kn++;
+                    break;
+
+                case "Tố cáo":
+                    tc++;
+                    break;
+
+                case "Kiến nghị":
+                    knn++;
+                    break;
+
+                case "Phản ảnh":
+                    pa++;
+                    break;
+
+                case "Tranh chấp":
+                    tranhchap++;
+                    break;
+            }
+
+        });
+
+        document.getElementById("kn").innerText = kn;
+        document.getElementById("tc").innerText = tc;
+        document.getElementById("knghi").innerText = knn;
+        document.getElementById("pa").innerText = pa;
+        document.getElementById("tranhchap").innerText = tranhchap;
+
+    });
+
+}
+
+window.toggleInput = function(checkId, textboxId){
+
+    const check = document.getElementById(checkId);
+
+    const textbox = document.getElementById(textboxId);
+
+    textbox.classList.toggle("hidden", !check.checked);
+}
+
+window.saveData = async function(){
+
+    const id = document.getElementById("id").value;
+
+    const data = {
+
+        id:id,
+
+        namNhanDon: document.getElementById("namNhanDon").value,
+
+        ngayNhanDon: document.getElementById("ngayNhanDon").value,
+
+        hoTen: document.getElementById("hoTen").value,
+
+        cccd: document.getElementById("cccd").value,
+
+        diaChi: document.getElementById("diaChi").value,
+
+        nguoiNhan: document.getElementById("nguoiNhan").value,
+
+        chucVu: document.getElementById("chucVu").value,
+
+        phanLoai: document.getElementById("phanLoai").value,
+
+        noiDung: document.getElementById("noiDung").value,
+
+        hoSo: document.getElementById("hoSo").value,
+
+        theoDoi: document.getElementById("theoDoi").value,
+
+        ghiChu: document.getElementById("ghiChu").value,
+
+        coQuan: document.getElementById("coQuan").value,
+
+        ngayTra: document.getElementById("ngayTra").value,
+
+        traLoi: document.getElementById("traLoi").value,
+
+        thuLy: document.getElementById("chkThuLy").checked,
+
+        thuLyText: document.getElementById("thuLyText").value,
+
+        traDon: document.getElementById("chkTraDon").checked,
+
+        traDonText: document.getElementById("traDonText").value,
+
+        chuyenDon: document.getElementById("chkChuyenDon").checked,
+
+        chuyenDonText: document.getElementById("chuyenDonText").value,
+
+        createdAt: new Date().toISOString()
+
+    };
+
+    await set(
+        ref(db, `tiepnhandon/${currentUser.uid}/${id}`),
+        data
+    );
+
+    await set(
+        ref(db, `counter/${currentUser.uid}`),
+        parseInt(id)
+    );
+
+    alert("Lưu thành công");
+
+    location.reload();
+}
+
+</script>
 
 </head>
 
@@ -166,35 +302,185 @@ SỔ TIẾP NHẬN ĐƠN
 
 <div class="container">
 
+<div class="stats">
+
+<div class="stat-box">Khiếu nại: <span id="kn">0</span></div>
+
+<div class="stat-box">Tố cáo: <span id="tc">0</span></div>
+
+<div class="stat-box">Kiến nghị: <span id="knghi">0</span></div>
+
+<div class="stat-box">Phản ảnh: <span id="pa">0</span></div>
+
+<div class="stat-box">Tranh chấp: <span id="tranhchap">0</span></div>
+
+</div>
+
+<div class="section">
+
 <div class="row">
+
+<div class="col">
 <label>ID</label>
 <input type="text" id="id" readonly>
 </div>
 
-<div class="row">
-<label>Năm</label>
-<input type="text" id="nam">
+<div class="col">
+<label>Năm nhận đơn</label>
+<input type="text" id="namNhanDon">
+</div>
 
+<div class="col">
 <label>Ngày nhận đơn</label>
-<input type="date" id="ngayNhan">
+<input type="date" id="ngayNhanDon">
+</div>
+
 </div>
 
 <div class="row">
-<label>Họ và tên</label>
+
+<div class="col">
+<label>Họ tên người khiếu nại</label>
 <input type="text" id="hoTen">
+</div>
 
-<label>Số CMND/CCCD</label>
-<input type="text" id="cmnd">
+<div class="col">
+<label>Số CCCD</label>
+<input type="text" id="cccd">
+</div>
+
 </div>
 
 <div class="row">
+<div class="col">
+<label>Địa chỉ</label>
+<textarea id="diaChi"></textarea>
+</div>
+</div>
+
+<div class="row">
+
+<div class="col">
+<label>Họ tên người nhận đơn</label>
+<input type="text" id="nguoiNhan">
+</div>
+
+<div class="col">
+<label>Chức vụ</label>
+<input type="text" id="chucVu">
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+<label>Phân loại đơn</label>
+<select id="phanLoai">
+<option>Khiếu nại</option>
+<option>Tố cáo</option>
+<option>Kiến nghị</option>
+<option>Phản ảnh</option>
+<option>Tranh chấp</option>
+</select>
+</div>
+
+<div class="col">
+<label>Trả lời</label>
+<select id="traLoi">
+<option>Trực tiếp</option>
+<option>Văn bản</option>
+</select>
+</div>
+
+</div>
+
+<div class="row">
+<div class="col">
 <label>Nội dung khiếu nại</label>
 <textarea id="noiDung"></textarea>
 </div>
+</div>
 
 <div class="row">
+<div class="col">
+<label>Hồ sơ (Tài liệu liên quan)</label>
+<textarea id="hoSo"></textarea>
+</div>
+</div>
+
+<div class="row">
+<div class="col">
+<label>Theo dõi kết quả giải quyết</label>
+<textarea id="theoDoi"></textarea>
+</div>
+</div>
+
+<div class="row">
+<div class="col">
 <label>Ghi chú</label>
 <textarea id="ghiChu"></textarea>
+</div>
+</div>
+
+<div class="row">
+
+<div class="col">
+<label>Cơ quan giải quyết</label>
+<input type="text" id="coQuan">
+</div>
+
+<div class="col">
+<label>Ngày trả kết quả</label>
+<input type="date" id="ngayTra">
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col">
+
+<label>
+<input type="checkbox" id="chkThuLy"
+onclick="toggleInput('chkThuLy','thuLyText')">
+Thụ lý giải quyết
+</label>
+
+<input type="text" id="thuLyText"
+class="hidden"
+placeholder="Nhập nội dung...">
+
+</div>
+
+<div class="col">
+
+<label>
+<input type="checkbox" id="chkTraDon"
+onclick="toggleInput('chkTraDon','traDonText')">
+Trả đơn
+</label>
+
+<input type="text" id="traDonText"
+class="hidden"
+placeholder="Nhập nội dung...">
+
+</div>
+
+<div class="col">
+
+<label>
+<input type="checkbox" id="chkChuyenDon"
+onclick="toggleInput('chkChuyenDon','chuyenDonText')">
+Chuyển đơn
+</label>
+
+<input type="text" id="chuyenDonText"
+class="hidden"
+placeholder="Nhập cơ quan...">
+
+</div>
+
 </div>
 
 <div class="row">
@@ -204,6 +490,12 @@ SỔ TIẾP NHẬN ĐƠN
 <button onclick="window.location.href='dashboard.html'">
 ĐÓNG
 </button>
+
+<button onclick="window.open('https://vbpl.vn','_blank')">
+TRA CỨU VĂN BẢN
+</button>
+
+</div>
 
 </div>
 
