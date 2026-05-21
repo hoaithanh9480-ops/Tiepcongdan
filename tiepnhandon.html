@@ -167,13 +167,13 @@ textarea{
 }
 
 .btn-dots{
-    width:8px;
-    height:30px;
+    width:28px;
+    height:34px;
     background:#f1f5f9;
     border:1px solid #cbd5e1;
-    border-radius:4px;
+    border-radius:6px;
     cursor:pointer;
-    font-size:12px;
+    font-size:14px;
     font-weight:bold;
     transition:0.2s;
     display:flex;
@@ -245,6 +245,15 @@ button:hover{
 .btn-search{
     background:#16a34a;
     color:white;
+}
+
+.btn-delete{
+    background:#ef4444;
+    color:white;
+}
+
+.btn-delete:hover{
+    background:#dc2626;
 }
 
 .message{
@@ -533,7 +542,6 @@ window.deleteLoaiDon = async function(loai){
         return;
     }
     
-    // Cập nhật tất cả đơn thuộc loại cũ sang loại mới
     const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
     const snapshot = await get(dataRef);
     const updates = {};
@@ -548,7 +556,6 @@ window.deleteLoaiDon = async function(loai){
         await update(ref(db, `tiepnhandon/${currentUser.uid}`), updates);
     }
     
-    // Xóa loại khỏi danh sách
     const index = loaiDonList.indexOf(loai);
     if(index !== -1) loaiDonList.splice(index, 1);
     await saveLoaiDon();
@@ -613,6 +620,45 @@ window.toggleTraLoi = function(){
 
     }
 
+}
+
+window.clearForm = function(){
+    if(confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đang nhập trên form?")){
+        // Xóa tất cả input, textarea, select
+        const inputs = document.querySelectorAll("input:not(#id), textarea, select");
+        inputs.forEach(input => {
+            if(input.type === "checkbox"){
+                input.checked = false;
+            } else if(input.tagName === "SELECT"){
+                input.selectedIndex = 0;
+            } else {
+                input.value = "";
+            }
+        });
+        
+        // Ẩn tất cả textbox ẩn của checkbox
+        document.getElementById("thuLyText")?.classList.add("hidden");
+        document.getElementById("traDonText")?.classList.add("hidden");
+        document.getElementById("chuyenDonText")?.classList.add("hidden");
+        document.getElementById("traLoiTextboxDiv")?.classList.add("hidden");
+        
+        // Reset giá trị các textbox ẩn
+        document.getElementById("thuLyText") ? document.getElementById("thuLyText").value = "" : null;
+        document.getElementById("traDonText") ? document.getElementById("traDonText").value = "" : null;
+        document.getElementById("chuyenDonText") ? document.getElementById("chuyenDonText").value = "" : null;
+        document.getElementById("traLoiText") ? document.getElementById("traLoiText").value = "" : null;
+        
+        // Bỏ check các checkbox
+        document.getElementById("chkThuLy") ? document.getElementById("chkThuLy").checked = false : null;
+        document.getElementById("chkTraDon") ? document.getElementById("chkTraDon").checked = false : null;
+        document.getElementById("chkChuyenDon") ? document.getElementById("chkChuyenDon").checked = false : null;
+        
+        // Đặt lại select Trả lời về mặc định
+        const traLoiSelect = document.getElementById("traLoi");
+        if(traLoiSelect) traLoiSelect.selectedIndex = 0;
+        
+        window.showMessage("🗑️ Đã xóa toàn bộ dữ liệu trên form", "success");
+    }
 }
 
 window.saveData = async function(){
@@ -1006,13 +1052,19 @@ placeholder="Nhập cơ quan chuyển đến...">
 </div>
 
 <!-- BUTTON -->
-
 <div class="button-group">
 
 <button class="btn-save"
 onclick="saveData()">
 
 💾 LƯU
+
+</button>
+
+<button class="btn-delete"
+onclick="clearForm()">
+
+🗑️ XÓA
 
 </button>
 
