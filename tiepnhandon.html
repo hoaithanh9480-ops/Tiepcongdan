@@ -65,17 +65,17 @@ body{
     top:5px;
     right:8px;
     cursor:pointer;
-    font-size:16px;
+    font-size:14px;
     color:#ef4444;
     background:white;
-    width:22px;
-    height:22px;
+    width:20px;
+    height:20px;
     border-radius:50%;
     display:flex;
     align-items:center;
     justify-content:center;
     font-weight:bold;
-    opacity:0.7;
+    opacity:0.6;
     transition:0.2s;
 }
 
@@ -158,7 +158,7 @@ textarea{
 
 .select-with-button{
     display:flex;
-    gap:8px;
+    gap:6px;
     align-items:center;
 }
 
@@ -167,14 +167,18 @@ textarea{
 }
 
 .btn-dots{
-    width:42px;
+    width:32px;
+    height:38px;
     background:#f1f5f9;
     border:1px solid #cbd5e1;
-    border-radius:10px;
+    border-radius:8px;
     cursor:pointer;
-    font-size:18px;
+    font-size:16px;
     font-weight:bold;
     transition:0.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .btn-dots:hover{
@@ -288,6 +292,8 @@ button:hover{
 
 .modal-content h3{
     margin-top:0;
+    margin-bottom:15px;
+    font-size:18px;
 }
 
 .modal-buttons{
@@ -298,6 +304,7 @@ button:hover{
 
 .modal-buttons button{
     flex:1;
+    min-width:auto;
 }
 
 @media(max-width:768px){
@@ -373,7 +380,9 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 let currentUser = null;
-let loaiDonList = ["Khiếu nại", "Tố cáo", "Kiến nghị", "Phản ảnh", "Tranh chấp"];
+let loaiDonList = [];
+
+const DEFAULT_LOAIDON = ["Khiếu nại", "Tố cáo", "Kiến nghị", "Phản ảnh", "Tranh chấp"];
 
 onAuthStateChanged(auth, async(user)=>{
 
@@ -403,6 +412,7 @@ async function loadLoaiDon(){
     if(snapshot.exists()){
         loaiDonList = snapshot.val();
     }else{
+        loaiDonList = [...DEFAULT_LOAIDON];
         await set(loaiDonRef, loaiDonList);
     }
 }
@@ -414,6 +424,7 @@ async function saveLoaiDon(){
 
 function loadSelectLoaiDon(){
     const select = document.getElementById("phanLoai");
+    if(!select) return;
     select.innerHTML = "";
     loaiDonList.forEach(loai => {
         const option = document.createElement("option");
@@ -445,6 +456,7 @@ function loadStats(){
         });
 
         const statsContainer = document.getElementById("statsContainer");
+        if(!statsContainer) return;
         statsContainer.innerHTML = "";
 
         loaiDonList.forEach(loai => {
@@ -453,8 +465,8 @@ function loadStats(){
             box.setAttribute("data-loai", loai);
             box.innerHTML = `
                 ${loai}<br>
-                <span id="stat_${loai.replace(/\s/g, '_')}">${stats[loai]}</span>
-                <div class="delete-loai" onclick="deleteLoaiDon('${loai.replace(/'/g, "\\'")}')" title="Xóa loại này">✕</div>
+                <span id="stat_${loai.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}">${stats[loai]}</span>
+                <div class="delete-loai" onclick="window.deleteLoaiDon('${loai.replace(/'/g, "\\'")}')" title="Xóa loại này">✕</div>
             `;
             statsContainer.appendChild(box);
         });
@@ -469,16 +481,17 @@ window.openAddLoaiModal = function(){
     modal.id = "addLoaiModal";
     modal.innerHTML = `
         <div class="modal-content">
-            <h3>Thêm loại đơn mới</h3>
+            <h3>➕ Thêm loại đơn mới</h3>
             <label>Tên loại đơn:</label>
-            <input type="text" id="newLoaiName" placeholder="VD: Đơn thư, Khiếu kiện,...">
+            <input type="text" id="newLoaiName" placeholder="VD: Đơn thư, Khiếu kiện,..." autocomplete="off">
             <div class="modal-buttons">
-                <button class="btn-save" onclick="addNewLoaiDon()">Thêm</button>
-                <button class="btn-close" onclick="closeModal()">Hủy</button>
+                <button class="btn-save" onclick="window.addNewLoaiDon()">Thêm</button>
+                <button class="btn-close" onclick="window.closeModal()">Hủy</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    document.getElementById("newLoaiName")?.focus();
 }
 
 window.closeModal = function(){
@@ -502,7 +515,7 @@ window.addNewLoaiDon = async function(){
     loadSelectLoaiDon();
     loadStats();
     closeModal();
-    showMessage(`✅ Đã thêm loại đơn: ${newLoai}`, "success");
+    window.showMessage(`✅ Đã thêm loại đơn: ${newLoai}`, "success");
 }
 
 window.deleteLoaiDon = async function(loai){
@@ -511,36 +524,36 @@ window.deleteLoaiDon = async function(loai){
         return;
     }
     
-    if(confirm(`Bạn có chắc muốn xóa loại đơn "${loai}"?\nCác đơn thuộc loại này sẽ không bị mất nhưng sẽ được chuyển sang loại khác.`)){
-        const newLoai = prompt(`Nhập loại đơn mới cho các đơn đang thuộc loại "${loai}":`, loaiDonList.find(l => l !== loai));
-        if(!newLoai || !loaiDonList.includes(newLoai)){
-            alert("Vui lòng chọn loại đơn hợp lệ từ danh sách hiện có!");
-            return;
-        }
-        
-        // Cập nhật tất cả đơn thuộc loại cũ sang loại mới
-        const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
-        const snapshot = await get(dataRef);
-        const updates = {};
-        snapshot.forEach((child) => {
-            const data = child.val();
-            if(data.phanLoai === loai){
-                updates[`${child.key}/phanLoai`] = newLoai;
-            }
-        });
-        
-        if(Object.keys(updates).length > 0){
-            await update(ref(db, `tiepnhandon/${currentUser.uid}`), updates);
-        }
-        
-        // Xóa loại khỏi danh sách
-        const index = loaiDonList.indexOf(loai);
-        if(index !== -1) loaiDonList.splice(index, 1);
-        await saveLoaiDon();
-        loadSelectLoaiDon();
-        loadStats();
-        showMessage(`✅ Đã xóa loại đơn: ${loai}`, "success");
+    const otherLoai = loaiDonList.find(l => l !== loai);
+    const newLoai = prompt(`Xóa loại "${loai}"?\nChọn loại đơn thay thế cho các đơn đang thuộc loại này:`, otherLoai);
+    
+    if(!newLoai || !loaiDonList.includes(newLoai)){
+        alert("Vui lòng chọn loại đơn hợp lệ từ danh sách hiện có!");
+        return;
     }
+    
+    // Cập nhật tất cả đơn thuộc loại cũ sang loại mới
+    const dataRef = ref(db, `tiepnhandon/${currentUser.uid}`);
+    const snapshot = await get(dataRef);
+    const updates = {};
+    snapshot.forEach((child) => {
+        const data = child.val();
+        if(data.phanLoai === loai){
+            updates[`${child.key}/phanLoai`] = newLoai;
+        }
+    });
+    
+    if(Object.keys(updates).length > 0){
+        await update(ref(db, `tiepnhandon/${currentUser.uid}`), updates);
+    }
+    
+    // Xóa loại khỏi danh sách
+    const index = loaiDonList.indexOf(loai);
+    if(index !== -1) loaiDonList.splice(index, 1);
+    await saveLoaiDon();
+    loadSelectLoaiDon();
+    loadStats();
+    window.showMessage(`✅ Đã xóa loại đơn: ${loai}`, "success");
 }
 
 async function loadCounter(){
@@ -694,7 +707,7 @@ window.saveData = async function(){
             parseInt(id)
         );
 
-        showMessage(
+        window.showMessage(
             "✅ Lưu dữ liệu thành công",
             "success"
         );
@@ -707,7 +720,7 @@ window.saveData = async function(){
 
     }catch(error){
 
-        showMessage(
+        window.showMessage(
             "❌ " + error.message,
             "error"
         );
@@ -716,7 +729,7 @@ window.saveData = async function(){
 
 }
 
-function showMessage(text,type){
+window.showMessage = function(text,type){
 
     const msg =
     document.getElementById("message");
@@ -863,7 +876,7 @@ id="chucVu">
 
 <select id="phanLoai"></select>
 
-<button type="button" class="btn-dots" onclick="openAddLoaiModal()" title="Thêm loại đơn mới">...</button>
+<button type="button" class="btn-dots" onclick="openAddLoaiModal()" title="Thêm loại đơn mới">⋯</button>
 
 </div>
 
