@@ -32,9 +32,9 @@
         .select-with-button select{flex:1}
         .btn-dots{width:32px;height:32px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s}
         .btn-dots:hover{background:#e2e8f0}
-        .checkbox-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
-        .checkbox-item{flex:1;min-width:140px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px}
-        .checkbox-item label{display:flex;align-items:center;gap:6px;font-size:.7rem;text-transform:none;font-weight:500;margin-bottom:6px}
+        .checkbox-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+        .checkbox-item{flex:1;min-width:140px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;box-shadow:0 1px 2px #00000005}
+        .checkbox-item label{display:flex;align-items:center;gap:6px;font-size:.7rem;text-transform:none;font-weight:500;margin-bottom:4px}
         .checkbox-item input[type="checkbox"]{width:14px;height:14px;margin:0}
         .checkbox-item input[type="text"]{margin-top:6px;font-size:.65rem;padding:5px 8px}
         .hidden{display:none}
@@ -115,6 +115,7 @@
                 <label style="margin-top:8px;">Theo dõi kết quả</label>
                 <textarea id="theoDoi" rows="2" placeholder="Tiến độ giải quyết..."></textarea>
             </div>
+            
             <div class="col form-box">
                 <label>Cơ quan giải quyết</label>
                 <input type="text" id="coQuan" placeholder="Tên cơ quan">
@@ -122,23 +123,24 @@
                 <input type="date" id="ngayTra">
                 <label style="margin-top:8px;">Ghi chú</label>
                 <textarea id="ghiChu" rows="2" placeholder="Ghi chú thêm..."></textarea>
+                
+                <div class="checkbox-row">
+                    <div class="checkbox-item">
+                        <label><input type="checkbox" id="chkThuLy" onclick="toggleInput('chkThuLy','thuLyText')"> Thụ lý giải quyết</label>
+                        <input type="text" id="thuLyText" class="hidden" placeholder="Nội dung xử lý...">
+                    </div>
+                    <div class="checkbox-item">
+                        <label><input type="checkbox" id="chkTraDon" onclick="toggleInput('chkTraDon','traDonText')"> Trả đơn</label>
+                        <input type="text" id="traDonText" class="hidden" placeholder="Lý do trả đơn...">
+                    </div>
+                    <div class="checkbox-item">
+                        <label><input type="checkbox" id="chkChuyenDon" onclick="toggleInput('chkChuyenDon','chuyenDonText')"> Chuyển đơn</label>
+                        <input type="text" id="chuyenDonText" class="hidden" placeholder="Cơ quan chuyển đến...">
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- 3 checkbox nằm ngang DƯỚI GHI CHÚ -->
-        <div class="checkbox-row">
-            <div class="checkbox-item">
-                <label><input type="checkbox" id="chkThuLy" onclick="toggleInput('chkThuLy','thuLyText')"> Thụ lý giải quyết</label>
-                <input type="text" id="thuLyText" class="hidden" placeholder="Nội dung xử lý...">
-            </div>
-            <div class="checkbox-item">
-                <label><input type="checkbox" id="chkTraDon" onclick="toggleInput('chkTraDon','traDonText')"> Trả đơn</label>
-                <input type="text" id="traDonText" class="hidden" placeholder="Lý do trả đơn...">
-            </div>
-            <div class="checkbox-item">
-                <label><input type="checkbox" id="chkChuyenDon" onclick="toggleInput('chkChuyenDon','chuyenDonText')"> Chuyển đơn</label>
-                <input type="text" id="chuyenDonText" class="hidden" placeholder="Cơ quan chuyển đến...">
-            </div>
-        </div>
+
         <div class="button-group">
             <button class="btn-save" onclick="saveData()"><i class="fas fa-save"></i> LƯU</button>
             <button class="btn-delete" onclick="clearForm()"><i class="fas fa-trash"></i> XÓA</button>
