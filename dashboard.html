@@ -6,7 +6,6 @@
     <title>Quản lý tiếp nhận đơn | Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <!-- SheetJS để xuất Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * {
@@ -19,49 +18,49 @@
             font-family: 'Inter', sans-serif;
             background: #eef2f9;
             min-height: 100vh;
-            padding: 24px 20px;
+            padding: 16px;
         }
 
         .dashboard-container {
             max-width: 1400px;
             margin: 0 auto;
             background: white;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
+        /* Header nhỏ gọn */
         .header-bar {
             background: linear-gradient(135deg, #1e2b3c 0%, #0f212f 100%);
-            padding: 20px 28px;
+            padding: 12px 20px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #2d4a6e;
         }
 
         .title-section h1 {
             color: white;
-            font-size: 1.7rem;
-            font-weight: 700;
+            font-size: 1.2rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .title-section h1 i {
             background: #ff9800;
-            padding: 8px;
+            padding: 5px;
             border-radius: 50%;
-            font-size: 1.2rem;
+            font-size: 0.9rem;
             color: #1e2b3c;
         }
 
         .date-location {
             color: #cbd5e1;
-            margin-top: 8px;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
+            margin-top: 4px;
         }
 
         .right-header {
@@ -69,46 +68,55 @@
         }
 
         .datetime-large {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 1.3rem;
+            font-weight: 600;
             color: white;
             font-family: monospace;
         }
 
         .date-text {
             color: #a0c4e2;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
         }
 
+        .user-info-tag {
+            background: #2d4a6e40;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.65rem;
+            color: #e2e8f0;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* Button nhóm - nhỏ gọn */
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
-            padding: 28px 28px 20px 28px;
+            gap: 8px;
+            padding: 12px 20px;
             background: #ffffff;
             border-bottom: 1px solid #e9edf2;
         }
 
         .btn-action {
-            flex: 1;
-            min-width: 160px;
             background: #f0f4fa;
             border: none;
-            padding: 14px 12px;
-            border-radius: 60px;
-            font-weight: 700;
-            font-size: 1rem;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             color: #1f2a44;
         }
 
         .btn-action i {
-            font-size: 1.2rem;
+            font-size: 0.8rem;
         }
 
         .btn-action:nth-child(1) { background: #2c7da0; color: white; }
@@ -116,13 +124,14 @@
         .btn-action:nth-child(3) { background: #f59e0b; color: white; }
         .btn-action:nth-child(4) { background: #10b981; color: white; }
         
-        .btn-action:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-action:hover { transform: translateY(-1px); opacity: 0.9; }
 
+        /* Filter bar nhỏ gọn */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            padding: 20px 28px;
+            gap: 8px;
+            padding: 10px 20px;
             background: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
             align-items: flex-end;
@@ -131,101 +140,87 @@
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 3px;
         }
 
         .filter-group label {
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             font-weight: 600;
             color: #475569;
             text-transform: uppercase;
         }
 
         .filter-group select, .filter-group input {
-            padding: 10px 14px;
-            border-radius: 30px;
+            padding: 5px 10px;
+            border-radius: 20px;
             border: 1px solid #cbd5e1;
             font-family: inherit;
+            font-size: 0.7rem;
             background: white;
-            min-width: 140px;
+            min-width: 100px;
         }
 
-        .filter-group select:focus, .filter-group input:focus {
-            outline: none;
-            border-color: #2c7da0;
-        }
-
-        .btn-filter {
+        .btn-filter, .btn-export {
             background: #2c7da0;
             color: white;
             border: none;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.7rem;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
         }
 
+        .btn-export { background: #10b981; }
         .btn-filter:hover { background: #1f6390; }
-
-        .btn-export {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
         .btn-export:hover { background: #059669; }
 
+        /* Thống kê nhỏ */
         .stats-summary {
             display: flex;
-            gap: 20px;
-            padding: 0 28px 20px 28px;
+            gap: 10px;
+            padding: 8px 20px;
             flex-wrap: wrap;
+            background: #ffffff;
         }
 
         .stat-card {
             background: #f1f5f9;
-            border-radius: 20px;
-            padding: 12px 20px;
+            border-radius: 16px;
+            padding: 6px 14px;
             text-align: center;
         }
 
         .stat-card .number {
-            font-size: 1.8rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: #2c7da0;
         }
 
         .stat-card .label {
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             color: #64748b;
         }
 
         .orders-section {
-            padding: 20px 28px 32px 28px;
+            padding: 12px 20px 20px 20px;
         }
 
         .section-title {
-            font-size: 1.2rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             color: #0f172a;
-            border-left: 5px solid #ff9800;
-            padding-left: 16px;
+            border-left: 3px solid #ff9800;
+            padding-left: 10px;
         }
 
         .table-wrapper {
             overflow-x: auto;
-            border-radius: 20px;
+            border-radius: 12px;
             border: 1px solid #eef2f6;
             background: #fff;
         }
@@ -233,20 +228,21 @@
         .order-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
         }
 
         .order-table th {
             background: #f8fafc;
-            padding: 14px 10px;
+            padding: 8px 8px;
             text-align: left;
             font-weight: 600;
             color: #1e293b;
             border-bottom: 1px solid #e2e8f0;
+            font-size: 0.7rem;
         }
 
         .order-table td {
-            padding: 12px 10px;
+            padding: 8px 8px;
             border-bottom: 1px solid #f1f5f9;
             color: #334155;
         }
@@ -258,26 +254,27 @@
         .badge-status {
             background: #e6f7e6;
             color: #2e7d32;
-            padding: 4px 10px;
-            border-radius: 50px;
-            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-size: 0.6rem;
             font-weight: 600;
             display: inline-block;
         }
 
         .empty-row td {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #94a3b8;
+            font-size: 0.75rem;
         }
 
         .action-icons button {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
-            padding: 6px 10px;
-            border-radius: 20px;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 16px;
             transition: 0.2s;
         }
 
@@ -308,52 +305,48 @@
 
         .modal-card {
             background: white;
-            max-width: 600px;
+            max-width: 550px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            border-radius: 36px;
-            padding: 28px 26px;
-            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            border-radius: 24px;
+            padding: 20px;
         }
 
         .modal-card h3 {
-            font-size: 1.3rem;
+            font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #0f172a;
         }
 
         .detail-row {
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
+            font-size: 0.75rem;
         }
 
         .detail-label {
             font-weight: 700;
             color: #475569;
-            min-width: 130px;
+            min-width: 120px;
             display: inline-block;
-        }
-
-        .detail-value {
-            color: #1e293b;
-            word-break: break-word;
         }
 
         .modal-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .modal-actions button {
             flex: 1;
-            padding: 12px;
-            border-radius: 40px;
+            padding: 8px;
+            border-radius: 30px;
             border: none;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 0.75rem;
             cursor: pointer;
         }
 
@@ -361,34 +354,23 @@
 
         .toast-msg {
             position: fixed;
-            bottom: 30px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: #1f2937;
             color: white;
-            padding: 12px 24px;
-            border-radius: 60px;
-            font-size: 0.85rem;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.7rem;
             z-index: 1100;
             display: none;
         }
 
-        .user-info-tag {
-            background: #2d4a6e40;
-            border-radius: 30px;
-            padding: 5px 12px;
-            font-size: 0.7rem;
-            color: #e2e8f0;
-            display: inline-block;
-            margin-top: 6px;
-        }
-
-        @media (max-width: 780px) {
-            .header-bar { flex-direction: column; text-align: center; gap: 12px; }
-            .right-header { text-align: center; }
-            .datetime-large { font-size: 1.5rem; }
-            .btn-action { font-size: 0.8rem; padding: 10px 8px; }
-            .filter-group select, .filter-group input { min-width: 100px; }
+        @media (max-width: 680px) {
+            body { padding: 8px; }
+            .filter-group select, .filter-group input { min-width: 80px; }
+            .btn-action { padding: 4px 10px; font-size: 0.7rem; }
+            .order-table th, .order-table td { padding: 6px 5px; }
         }
     </style>
 </head>
@@ -399,8 +381,7 @@
         <div class="title-section">
             <h1><i class="fas fa-clipboard-list"></i> QUẢN LÝ TIẾP NHẬN ĐƠN</h1>
             <div class="date-location">
-                <i class="fas fa-map-marker-alt"></i> Ninh Kiều, 
-                <span id="current-location-date"></span>
+                <i class="fas fa-map-marker-alt"></i> Ninh Kiều, <span id="current-location-date"></span>
             </div>
             <div class="user-info-tag" id="user-email-display">
                 <i class="fas fa-user-circle"></i> <span>Đang tải...</span>
@@ -413,67 +394,49 @@
     </div>
 
     <div class="action-buttons">
-        <button class="btn-action" onclick="window.location.href='tiepnhandon.html'">
-            <i class="fas fa-plus-circle"></i> TIẾP NHẬN ĐƠN
-        </button>
-        <button class="btn-action" id="logout-btn-nav">
-            <i class="fas fa-sign-out-alt"></i> THOÁT
-        </button>
-        <button class="btn-action" id="refresh-btn">
-            <i class="fas fa-sync-alt"></i> LÀM MỚI
-        </button>
-        <button class="btn-action" id="export-all-btn">
-            <i class="fas fa-file-excel"></i> XUẤT EXCEL
-        </button>
+        <button class="btn-action" onclick="window.location.href='tiepnhandon.html'"><i class="fas fa-plus-circle"></i> TIẾP NHẬN</button>
+        <button class="btn-action" id="logout-btn-nav"><i class="fas fa-sign-out-alt"></i> THOÁT</button>
+        <button class="btn-action" id="refresh-btn"><i class="fas fa-sync-alt"></i> LÀM MỚI</button>
+        <button class="btn-action" id="export-all-btn"><i class="fas fa-file-excel"></i> XUẤT ALL</button>
     </div>
 
-    <!-- Bộ lọc -->
     <div class="filter-bar">
         <div class="filter-group">
-            <label><i class="fas fa-calendar"></i> Tháng</label>
+            <label>Tháng</label>
             <select id="filter-month">
                 <option value="">Tất cả</option>
-                <option value="1">Tháng 1</option><option value="2">Tháng 2</option>
-                <option value="3">Tháng 3</option><option value="4">Tháng 4</option>
-                <option value="5">Tháng 5</option><option value="6">Tháng 6</option>
-                <option value="7">Tháng 7</option><option value="8">Tháng 8</option>
-                <option value="9">Tháng 9</option><option value="10">Tháng 10</option>
-                <option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+                <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+                <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+                <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+                <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
             </select>
         </div>
         <div class="filter-group">
-            <label><i class="fas fa-calendar-alt"></i> Năm</label>
-            <select id="filter-year">
-                <option value="">Tất cả</option>
-            </select>
+            <label>Năm</label>
+            <select id="filter-year"><option value="">Tất cả</option></select>
         </div>
         <div class="filter-group">
-            <label><i class="fas fa-tag"></i> Loại đơn</label>
-            <select id="filter-loai">
-                <option value="">Tất cả</option>
-            </select>
+            <label>Loại đơn</label>
+            <select id="filter-loai"><option value="">Tất cả</option></select>
         </div>
         <div class="filter-group">
-            <label><i class="fas fa-search"></i> Tìm kiếm</label>
+            <label>Tìm kiếm</label>
             <input type="text" id="search-input" placeholder="Tên hoặc nội dung...">
         </div>
         <button class="btn-filter" id="apply-filter"><i class="fas fa-filter"></i> LỌC</button>
-        <button class="btn-export" id="export-filter-btn"><i class="fas fa-download"></i> XUẤT KẾT QUẢ LỌC</button>
+        <button class="btn-export" id="export-filter-btn"><i class="fas fa-download"></i> XUẤT LỌC</button>
     </div>
 
-    <!-- Thống kê nhanh -->
     <div class="stats-summary" id="stats-summary"></div>
 
     <div class="orders-section">
-        <div class="section-title">
-            <i class="fas fa-receipt"></i> Danh sách đơn đã tiếp nhận
-        </div>
+        <div class="section-title"><i class="fas fa-receipt"></i> Danh sách đơn đã tiếp nhận</div>
         <div class="table-wrapper">
-            <table class="order-table" id="order-table">
+            <table class="order-table">
                 <thead>
                     <tr>
-                        <th>Mã đơn</th><th>Người khiếu nại</th><th>Phân loại</th>
-                        <th>Nội dung</th><th>Ngày nhận</th><th>Trạng thái xử lý</th><th>Thao tác</th>
+                        <th>Mã</th><th>Người khiếu nại</th><th>Phân loại</th>
+                        <th>Nội dung</th><th>Ngày nhận</th><th>Trạng thái</th><th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="order-table-body">
@@ -484,7 +447,6 @@
     </div>
 </div>
 
-<!-- Modal xem chi tiết -->
 <div id="detailModal" class="modal-overlay">
     <div class="modal-card">
         <h3><i class="fas fa-file-alt"></i> CHI TIẾT ĐƠN</h3>
@@ -527,7 +489,7 @@
         toast.style.display = 'block';
         setTimeout(() => {
             toast.style.display = 'none';
-        }, 2500);
+        }, 2000);
     }
 
     function escapeHtml(str) {
@@ -540,19 +502,13 @@
         });
     }
 
-    // Lấy danh sách loại đơn
     async function loadLoaiDon() {
         if (!currentUser) return;
-        const loaiDonRef = ref(db, `loaidon/${currentUser.uid}`);
-        const snapshot = await get(loaiDonRef);
-        if (snapshot.exists()) {
-            loaiDonList = snapshot.val();
-        } else {
-            loaiDonList = ["Khiếu nại", "Tố cáo", "Kiến nghị", "Phản ảnh", "Tranh chấp"];
-        }
+        const snapshot = await get(ref(db, `loaidon/${currentUser.uid}`));
+        loaiDonList = snapshot.exists() ? snapshot.val() : ["Khiếu nại", "Tố cáo", "Kiến nghị", "Phản ảnh", "Tranh chấp"];
         
         const filterSelect = document.getElementById('filter-loai');
-        filterSelect.innerHTML = '<option value="">Tất cả loại đơn</option>';
+        filterSelect.innerHTML = '<option value="">Tất cả</option>';
         loaiDonList.forEach(loai => {
             const option = document.createElement('option');
             option.value = loai;
@@ -561,54 +517,29 @@
         });
     }
 
-    // Lấy dữ liệu từ Firebase
     function loadOrders() {
         if (!currentUser) return;
-        const ordersRef = ref(db, `tiepnhandon/${currentUser.uid}`);
-        onValue(ordersRef, (snapshot) => {
+        onValue(ref(db, `tiepnhandon/${currentUser.uid}`), (snapshot) => {
             const data = snapshot.val();
-            if (data) {
-                allOrders = Object.entries(data).map(([id, value]) => ({
-                    id: id,
-                    ...value
-                })).sort((a, b) => parseInt(b.id) - parseInt(a.id));
-            } else {
-                allOrders = [];
-            }
+            allOrders = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })).sort((a, b) => parseInt(b.id) - parseInt(a.id)) : [];
             applyFilterAndRender();
         });
     }
 
-    // Lấy tháng từ ngày (định dạng dd/mm/yyyy hoặc yyyy-mm-dd)
     function getMonthFromDate(dateStr) {
         if (!dateStr) return null;
-        // Xử lý định dạng dd/mm/yyyy
-        if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) return parseInt(parts[1]);
-        }
-        // Xử lý định dạng yyyy-mm-dd
-        if (dateStr.includes('-')) {
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return parseInt(parts[1]);
-        }
+        if (dateStr.includes('/')) return parseInt(dateStr.split('/')[1]);
+        if (dateStr.includes('-')) return parseInt(dateStr.split('-')[1]);
         return null;
     }
 
     function getYearFromDate(dateStr) {
         if (!dateStr) return null;
-        if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) return parseInt(parts[2]);
-        }
-        if (dateStr.includes('-')) {
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return parseInt(parts[0]);
-        }
+        if (dateStr.includes('/')) return parseInt(dateStr.split('/')[2]);
+        if (dateStr.includes('-')) return parseInt(dateStr.split('-')[0]);
         return null;
     }
 
-    // Lọc và render
     function applyFilterAndRender() {
         const month = document.getElementById('filter-month').value;
         const year = document.getElementById('filter-year').value;
@@ -616,49 +547,31 @@
         const searchText = document.getElementById('search-input').value.toLowerCase().trim();
 
         let filtered = [...allOrders];
-
-        if (month) {
-            filtered = filtered.filter(order => getMonthFromDate(order.ngayNhanDon) === parseInt(month));
-        }
-        if (year) {
-            filtered = filtered.filter(order => getYearFromDate(order.ngayNhanDon) === parseInt(year));
-        }
-        if (loai) {
-            filtered = filtered.filter(order => order.phanLoai === loai);
-        }
-        if (searchText) {
-            filtered = filtered.filter(order => 
-                (order.hoTen && order.hoTen.toLowerCase().includes(searchText)) ||
-                (order.noiDung && order.noiDung.toLowerCase().includes(searchText)) ||
-                (order.id && order.id.includes(searchText))
-            );
-        }
-
+        if (month) filtered = filtered.filter(o => getMonthFromDate(o.ngayNhanDon) === parseInt(month));
+        if (year) filtered = filtered.filter(o => getYearFromDate(o.ngayNhanDon) === parseInt(year));
+        if (loai) filtered = filtered.filter(o => o.phanLoai === loai);
+        if (searchText) filtered = filtered.filter(o => 
+            (o.hoTen && o.hoTen.toLowerCase().includes(searchText)) ||
+            (o.noiDung && o.noiDung.toLowerCase().includes(searchText))
+        );
         renderOrders(filtered);
         updateStats(filtered);
     }
 
-    // Cập nhật thống kê
     function updateStats(orders) {
         const statsDiv = document.getElementById('stats-summary');
-        const total = orders.length;
         const byLoai = {};
-        orders.forEach(order => {
-            const loai = order.phanLoai || 'Chưa phân loại';
-            byLoai[loai] = (byLoai[loai] || 0) + 1;
-        });
+        orders.forEach(o => { const l = o.phanLoai || 'Khác'; byLoai[l] = (byLoai[l] || 0) + 1; });
         
-        let html = `<div class="stat-card"><div class="number">${total}</div><div class="label">Tổng số đơn</div></div>`;
-        Object.entries(byLoai).slice(0, 5).forEach(([loai, count]) => {
-            html += `<div class="stat-card"><div class="number">${count}</div><div class="label">${loai}</div></div>`;
+        let html = `<div class="stat-card"><div class="number">${orders.length}</div><div class="label">Tổng</div></div>`;
+        Object.entries(byLoai).slice(0, 4).forEach(([l, c]) => {
+            html += `<div class="stat-card"><div class="number">${c}</div><div class="label">${l.length > 12 ? l.slice(0,10)+'…' : l}</div></div>`;
         });
         statsDiv.innerHTML = html;
     }
 
-    // Hiển thị bảng
     function renderOrders(orders) {
         const tbody = document.getElementById('order-table-body');
-        
         if (orders.length === 0) {
             tbody.innerHTML = '<tr class="empty-row"><td colspan="7">📭 Không có đơn nào</td></tr>';
             return;
@@ -666,33 +579,29 @@
         
         let html = '';
         orders.forEach(order => {
-            const noiDungNgan = order.noiDung ? (order.noiDung.length > 50 ? order.noiDung.substring(0, 50) + '…' : order.noiDung) : '—';
             let trangThai = 'Đang xử lý';
             if (order.thuLy) trangThai = 'Đã thụ lý';
             if (order.traDon) trangThai = 'Trả đơn';
             if (order.chuyenDon) trangThai = 'Chuyển đơn';
             
-            html += `
-                <tr>
-                    <td><strong>#${order.id}</strong></td>
-                    <td>${escapeHtml(order.hoTen || '—')}</td>
-                    <td><span class="badge-status">${escapeHtml(order.phanLoai || '—')}</span></td>
-                    <td>${escapeHtml(noiDungNgan)}</td>
-                    <td>${order.ngayNhanDon || '—'}</td>
-                    <td>${trangThai}</td>
-                    <td class="action-icons">
-                        <button class="btn-view" data-id="${order.id}" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
-                        <button class="btn-delete-order" data-id="${order.id}" title="Xóa đơn"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
+            html += `<tr>
+                <td><strong>#${order.id}</strong></td>
+                <td>${escapeHtml(order.hoTen || '—')}</td>
+                <td><span class="badge-status">${escapeHtml(order.phanLoai || '—')}</span></td>
+                <td>${escapeHtml((order.noiDung || '').substring(0, 40))}${(order.noiDung || '').length > 40 ? '…' : ''}</td>
+                <td>${order.ngayNhanDon || '—'}</td>
+                <td>${trangThai}</td>
+                <td class="action-icons">
+                    <button class="btn-view" data-id="${order.id}"><i class="fas fa-eye"></i></button>
+                    <button class="btn-delete-order" data-id="${order.id}"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
         });
         tbody.innerHTML = html;
         
         document.querySelectorAll('.btn-view').forEach(btn => {
             btn.addEventListener('click', () => {
-                const id = btn.getAttribute('data-id');
-                const order = allOrders.find(o => o.id === id);
+                const order = allOrders.find(o => o.id === btn.getAttribute('data-id'));
                 if (order) showDetail(order);
             });
         });
@@ -702,59 +611,43 @@
                 const id = btn.getAttribute('data-id');
                 if (confirm(`Xóa đơn #${id}?`)) {
                     await remove(ref(db, `tiepnhandon/${currentUser.uid}/${id}`));
-                    showToast(`Đã xóa đơn #${id}`);
+                    showToast(`Đã xóa #${id}`);
                 }
             });
         });
     }
 
-    // Xuất Excel
-    function exportToExcel(orders, filename = 'danh_sach_don.xlsx') {
-        const excelData = orders.map(order => ({
-            'Mã đơn': order.id,
-            'Ngày nhận': order.ngayNhanDon || '',
-            'Năm nhận': order.namNhanDon || '',
-            'Họ tên người khiếu nại': order.hoTen || '',
-            'Số CCCD': order.cccd || '',
-            'Địa chỉ': order.diaChi || '',
-            'Phân loại đơn': order.phanLoai || '',
-            'Nội dung khiếu nại': order.noiDung || '',
-            'Cơ quan giải quyết': order.coQuan || '',
-            'Ngày trả kết quả': order.ngayTra || '',
-            'Trả lời': order.traLoi || '',
-            'Thụ lý': order.thuLy ? 'Có' : 'Không',
-            'Trả đơn': order.traDon ? 'Có' : 'Không',
-            'Chuyển đơn': order.chuyenDon ? 'Có' : 'Không',
-            'Ghi chú': order.ghiChu || ''
+    function exportToExcel(orders, filename) {
+        const data = orders.map(o => ({
+            'Mã đơn': o.id, 'Ngày nhận': o.ngayNhanDon || '', 'Năm nhận': o.namNhanDon || '',
+            'Họ tên': o.hoTen || '', 'CCCD': o.cccd || '', 'Địa chỉ': o.diaChi || '',
+            'Phân loại': o.phanLoai || '', 'Nội dung': o.noiDung || '',
+            'Cơ quan': o.coQuan || '', 'Ngày trả': o.ngayTra || '',
+            'Thụ lý': o.thuLy ? 'Có' : 'Không', 'Trả đơn': o.traDon ? 'Có' : 'Không', 'Chuyển đơn': o.chuyenDon ? 'Có' : 'Không'
         }));
-        
-        const ws = XLSX.utils.json_to_sheet(excelData);
+        const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đơn');
         XLSX.writeFile(wb, filename);
-        showToast(`Đã xuất ${orders.length} đơn ra file Excel`);
+        showToast(`Xuất ${orders.length} đơn`);
     }
 
     function showDetail(order) {
         const detailDiv = document.getElementById('detail-content');
         detailDiv.innerHTML = `
-            <div class="detail-row"><span class="detail-label">Mã đơn:</span> <span class="detail-value">#${order.id}</span></div>
-            <div class="detail-row"><span class="detail-label">Ngày nhận:</span> <span class="detail-value">${order.ngayNhanDon || '—'}</span></div>
-            <div class="detail-row"><span class="detail-label">Năm nhận:</span> <span class="detail-value">${order.namNhanDon || '—'}</span></div>
-            <div class="detail-row"><span class="detail-label">Họ tên:</span> <span class="detail-value">${escapeHtml(order.hoTen || '—')}</span></div>
-            <div class="detail-row"><span class="detail-label">CCCD:</span> <span class="detail-value">${order.cccd || '—'}</span></div>
-            <div class="detail-row"><span class="detail-label">Địa chỉ:</span> <span class="detail-value">${escapeHtml(order.diaChi || '—')}</span></div>
-            <div class="detail-row"><span class="detail-label">Người nhận:</span> <span class="detail-value">${order.nguoiNhan || '—'} - ${order.chucVu || ''}</span></div>
-            <div class="detail-row"><span class="detail-label">Phân loại:</span> <span class="detail-value">${escapeHtml(order.phanLoai || '—')}</span></div>
-            <div class="detail-row"><span class="detail-label">Nội dung:</span> <span class="detail-value">${escapeHtml(order.noiDung || '—')}</span></div>
-            <div class="detail-row"><span class="detail-label">Cơ quan:</span> <span class="detail-value">${order.coQuan || '—'}</span></div>
-            <div class="detail-row"><span class="detail-label">Ngày trả:</span> <span class="detail-value">${order.ngayTra || '—'}</span></div>
-            <div class="detail-row"><span class="detail-label">Trả lời:</span> <span class="detail-value">${order.traLoi || '—'} ${order.traLoiText ? ': ' + order.traLoiText : ''}</span></div>
-            <div class="detail-row"><span class="detail-label">Thụ lý:</span> <span class="detail-value">${order.thuLy ? '✅ Có' : '❌ Không'} ${order.thuLyText ? ': ' + order.thuLyText : ''}</span></div>
-            <div class="detail-row"><span class="detail-label">Trả đơn:</span> <span class="detail-value">${order.traDon ? '✅ Có' : '❌ Không'} ${order.traDonText ? ': ' + order.traDonText : ''}</span></div>
-            <div class="detail-row"><span class="detail-label">Chuyển đơn:</span> <span class="detail-value">${order.chuyenDon ? '✅ Có' : '❌ Không'} ${order.chuyenDonText ? ': ' + order.chuyenDonText : ''}</span></div>
-            <div class="detail-row"><span class="detail-label">Theo dõi:</span> <span class="detail-value">${escapeHtml(order.theoDoi || '—')}</span></div>
-            <div class="detail-row"><span class="detail-label">Ghi chú:</span> <span class="detail-value">${escapeHtml(order.ghiChu || '—')}</span></div>
+            <div class="detail-row"><span class="detail-label">Mã đơn:</span> #${order.id}</div>
+            <div class="detail-row"><span class="detail-label">Ngày nhận:</span> ${order.ngayNhanDon || '—'}</div>
+            <div class="detail-row"><span class="detail-label">Họ tên:</span> ${escapeHtml(order.hoTen || '—')}</div>
+            <div class="detail-row"><span class="detail-label">CCCD:</span> ${order.cccd || '—'}</div>
+            <div class="detail-row"><span class="detail-label">Địa chỉ:</span> ${escapeHtml(order.diaChi || '—')}</div>
+            <div class="detail-row"><span class="detail-label">Phân loại:</span> ${escapeHtml(order.phanLoai || '—')}</div>
+            <div class="detail-row"><span class="detail-label">Nội dung:</span> ${escapeHtml(order.noiDung || '—')}</div>
+            <div class="detail-row"><span class="detail-label">Cơ quan:</span> ${order.coQuan || '—'}</div>
+            <div class="detail-row"><span class="detail-label">Trả lời:</span> ${order.traLoi || '—'} ${order.traLoiText ? ': ' + order.traLoiText : ''}</div>
+            <div class="detail-row"><span class="detail-label">Thụ lý:</span> ${order.thuLy ? 'Có' : 'Không'} ${order.thuLyText ? ': ' + order.thuLyText : ''}</div>
+            <div class="detail-row"><span class="detail-label">Trả đơn:</span> ${order.traDon ? 'Có' : 'Không'} ${order.traDonText ? ': ' + order.traDonText : ''}</div>
+            <div class="detail-row"><span class="detail-label">Chuyển đơn:</span> ${order.chuyenDon ? 'Có' : 'Không'} ${order.chuyenDonText ? ': ' + order.chuyenDonText : ''}</div>
+            <div class="detail-row"><span class="detail-label">Ghi chú:</span> ${escapeHtml(order.ghiChu || '—')}</div>
         `;
         document.getElementById('detailModal').classList.add('active');
     }
@@ -764,15 +657,6 @@
         window.location.href = "index.html";
     }
 
-    function updateClockAndDate() {
-        const now = new Date();
-        document.getElementById('live-clock').innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-        const fullDate = now.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('full-date-text').innerHTML = now.toLocaleDateString('vi-VN', { weekday: 'long' }) + ', ' + fullDate;
-        document.getElementById('current-location-date').innerHTML = `Ninh Kiều, ${fullDate}`;
-    }
-
-    // Tạo danh sách năm (từ 2020 đến năm hiện tại + 1)
     function populateYears() {
         const yearSelect = document.getElementById('filter-year');
         const currentYear = new Date().getFullYear();
@@ -784,7 +668,14 @@
         }
     }
 
-    // Khởi tạo
+    function updateClockAndDate() {
+        const now = new Date();
+        document.getElementById('live-clock').innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const fullDate = now.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('full-date-text').innerHTML = now.toLocaleDateString('vi-VN', { weekday: 'short' }) + ', ' + fullDate;
+        document.getElementById('current-location-date').innerHTML = fullDate;
+    }
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
@@ -800,51 +691,29 @@
     updateClockAndDate();
     setInterval(updateClockAndDate, 60000);
 
-    // Sự kiện
     document.getElementById('logout-btn-nav').addEventListener('click', handleLogout);
-    document.getElementById('refresh-btn').addEventListener('click', () => {
-        loadOrders();
-        showToast('Đã làm mới danh sách');
-    });
+    document.getElementById('refresh-btn').addEventListener('click', () => { loadOrders(); showToast('Đã làm mới'); });
     document.getElementById('apply-filter').addEventListener('click', applyFilterAndRender);
     document.getElementById('export-all-btn').addEventListener('click', () => {
-        if (allOrders.length === 0) {
-            showToast('Không có dữ liệu để xuất', true);
-            return;
-        }
-        exportToExcel(allOrders, `danh_sach_tat_ca_don_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+        if (allOrders.length) exportToExcel(allOrders, `tat_ca_don_${new Date().toISOString().slice(0,10)}.xlsx`);
+        else showToast('Không có dữ liệu', true);
     });
     document.getElementById('export-filter-btn').addEventListener('click', () => {
         const month = document.getElementById('filter-month').value;
         const year = document.getElementById('filter-year').value;
         const loai = document.getElementById('filter-loai').value;
-        
         let filtered = [...allOrders];
-        if (month) filtered = filtered.filter(order => getMonthFromDate(order.ngayNhanDon) === parseInt(month));
-        if (year) filtered = filtered.filter(order => getYearFromDate(order.ngayNhanDon) === parseInt(year));
-        if (loai) filtered = filtered.filter(order => order.phanLoai === loai);
-        
-        if (filtered.length === 0) {
-            showToast('Không có dữ liệu với bộ lọc hiện tại', true);
-            return;
-        }
-        let filename = 'ket_qua_loc';
-        if (month) filename += `_thang${month}`;
-        if (year) filename += `_nam${year}`;
-        if (loai) filename += `_${loai}`;
-        exportToExcel(filtered, `${filename}.xlsx`);
+        if (month) filtered = filtered.filter(o => getMonthFromDate(o.ngayNhanDon) === parseInt(month));
+        if (year) filtered = filtered.filter(o => getYearFromDate(o.ngayNhanDon) === parseInt(year));
+        if (loai) filtered = filtered.filter(o => o.phanLoai === loai);
+        if (filtered.length) exportToExcel(filtered, `ket_qua_loc_${new Date().toISOString().slice(0,10)}.xlsx`);
+        else showToast('Không có dữ liệu để xuất', true);
     });
     document.getElementById('closeDetailBtn').addEventListener('click', () => {
         document.getElementById('detailModal').classList.remove('active');
     });
-    document.getElementById('search-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyFilterAndRender();
-    });
-    
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('detailModal');
-        if (e.target === modal) modal.classList.remove('active');
-    });
+    document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFilterAndRender(); });
+    window.addEventListener('click', (e) => { if (e.target === document.getElementById('detailModal')) document.getElementById('detailModal').classList.remove('active'); });
 </script>
 </body>
 </html>
