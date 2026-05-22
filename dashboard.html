@@ -30,7 +30,6 @@
             overflow: hidden;
         }
 
-        /* Header nhỏ gọn */
         .header-bar {
             background: linear-gradient(135deg, #1e2b3c 0%, #0f212f 100%);
             padding: 12px 20px;
@@ -89,7 +88,6 @@
             margin-top: 4px;
         }
 
-        /* Button nhóm - nhỏ gọn */
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -126,7 +124,6 @@
         
         .btn-action:hover { transform: translateY(-1px); opacity: 0.9; }
 
-        /* Filter bar nhỏ gọn */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -178,7 +175,6 @@
         .btn-filter:hover { background: #1f6390; }
         .btn-export:hover { background: #059669; }
 
-        /* Thống kê nhỏ */
         .stats-summary {
             display: flex;
             gap: 10px;
@@ -285,22 +281,22 @@
 
         .btn-view:hover, .btn-edit:hover, .btn-delete-order:hover { transform: scale(1.02); opacity: 0.85; }
 
-        /* Modal styles */
+        /* Modal styles - improved detail view */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(3px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             visibility: hidden;
             opacity: 0;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
         }
 
         .modal-overlay.active {
@@ -310,24 +306,163 @@
 
         .modal-card {
             background: white;
-            max-width: 650px;
+            max-width: 800px;
             width: 90%;
             max-height: 85vh;
             overflow-y: auto;
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
+            border-radius: 28px;
+            padding: 0;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
+            animation: modalSlideIn 0.2s ease;
         }
 
-        .modal-card h3 {
+        @keyframes modalSlideIn {
+            from {
+                transform: scale(0.96);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e2b3c 0%, #0f212f 100%);
+            padding: 18px 24px;
+            border-radius: 28px 28px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: white;
             font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 18px;
-            color: #0f172a;
-            border-left: 4px solid #ff9800;
-            padding-left: 12px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
+        .modal-header h3 i {
+            background: #ff9800;
+            padding: 6px;
+            border-radius: 50%;
+            font-size: 0.85rem;
+            color: #1e2b3c;
+        }
+
+        .modal-close-icon {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        .modal-close-icon:hover {
+            background: #dc2626;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+        }
+
+        /* Two-column detail layout */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px 20px;
+        }
+
+        .detail-item {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 12px 14px;
+            transition: 0.1s;
+            border-left: 3px solid #ff9800;
+        }
+
+        .detail-item-full {
+            grid-column: span 2;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 12px 14px;
+            border-left: 3px solid #ff9800;
+        }
+
+        .detail-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .detail-label i {
+            width: 20px;
+            color: #ff9800;
+            font-size: 0.7rem;
+        }
+
+        .detail-value {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #0f172a;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .status-badge-detail {
+            display: inline-block;
+            background: #e6f7e6;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px 24px;
+            justify-content: flex-end;
+            background: #ffffff;
+            border-top: 1px solid #eef2f6;
+        }
+
+        .modal-actions button {
+            padding: 8px 22px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .btn-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        /* Edit modal keep simple */
         .edit-form-row {
             margin-bottom: 14px;
             display: flex;
@@ -354,30 +489,6 @@
             background: #fff;
         }
 
-        .edit-form-row textarea {
-            min-height: 60px;
-            resize: vertical;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            justify-content: flex-end;
-        }
-
-        .modal-actions button {
-            padding: 8px 18px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 500;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-
-        .btn-save { background: #10b981; color: white; }
-        .btn-cancel { background: #e2e8f0; color: #1e293b; }
-
         .toast-msg {
             position: fixed;
             bottom: 20px;
@@ -397,8 +508,9 @@
             .filter-group select, .filter-group input { min-width: 80px; }
             .btn-action { padding: 4px 10px; font-size: 0.7rem; }
             .order-table th, .order-table td { padding: 6px 5px; }
-            .edit-form-row { flex-direction: column; }
-            .edit-form-row label { width: 100%; margin-bottom: 2px; }
+            .detail-grid { grid-template-columns: 1fr; gap: 12px; }
+            .detail-item-full { grid-column: span 1; }
+            .modal-body { padding: 16px; }
         }
     </style>
 </head>
@@ -469,16 +581,19 @@
                 <tbody id="order-table-body">
                     <tr class="empty-row"><td colspan="7">📭 Đang tải dữ liệu...</td></tr>
                 </tbody>
-            </table>
+             </table>
         </div>
     </div>
 </div>
 
-<!-- Modal xem chi tiết -->
+<!-- Modal chi tiết cải tiến đẹp hơn -->
 <div id="detailModal" class="modal-overlay">
     <div class="modal-card">
-        <h3><i class="fas fa-file-alt"></i> CHI TIẾT ĐƠN</h3>
-        <div id="detail-content"></div>
+        <div class="modal-header">
+            <h3><i class="fas fa-file-alt"></i> CHI TIẾT ĐƠN</h3>
+            <button class="modal-close-icon" id="closeDetailHeaderBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="detail-content"></div>
         <div class="modal-actions">
             <button class="btn-cancel" id="closeDetailBtn">Đóng</button>
         </div>
@@ -488,74 +603,79 @@
 <!-- Modal chỉnh sửa đơn -->
 <div id="editModal" class="modal-overlay">
     <div class="modal-card">
-        <h3><i class="fas fa-pen-alt"></i> CHỈNH SỬA ĐƠN</h3>
-        <form id="editForm">
-            <input type="hidden" id="edit-order-id">
-            <div class="edit-form-row">
-                <label>Ngày nhận:</label>
-                <input type="text" id="edit-ngayNhanDon" placeholder="DD/MM/YYYY">
-            </div>
-            <div class="edit-form-row">
-                <label>Họ tên:</label>
-                <input type="text" id="edit-hoTen">
-            </div>
-            <div class="edit-form-row">
-                <label>CCCD:</label>
-                <input type="text" id="edit-cccd">
-            </div>
-            <div class="edit-form-row">
-                <label>Địa chỉ:</label>
-                <input type="text" id="edit-diaChi">
-            </div>
-            <div class="edit-form-row">
-                <label>Phân loại:</label>
-                <select id="edit-phanLoai"></select>
-            </div>
-            <div class="edit-form-row">
-                <label>Nội dung:</label>
-                <textarea id="edit-noiDung" rows="3"></textarea>
-            </div>
-            <div class="edit-form-row">
-                <label>Cơ quan:</label>
-                <input type="text" id="edit-coQuan">
-            </div>
-            <div class="edit-form-row">
-                <label>Trả lời:</label>
-                <input type="text" id="edit-traLoi" placeholder="Nội dung trả lời">
-            </div>
-            <div class="edit-form-row">
-                <label>Thụ lý:</label>
-                <select id="edit-thuLy">
-                    <option value="false">Không</option>
-                    <option value="true">Có</option>
-                </select>
-                <input type="text" id="edit-thuLyText" placeholder="Ghi chú thụ lý" style="flex:1.5;">
-            </div>
-            <div class="edit-form-row">
-                <label>Trả đơn:</label>
-                <select id="edit-traDon">
-                    <option value="false">Không</option>
-                    <option value="true">Có</option>
-                </select>
-                <input type="text" id="edit-traDonText" placeholder="Lý do trả đơn" style="flex:1.5;">
-            </div>
-            <div class="edit-form-row">
-                <label>Chuyển đơn:</label>
-                <select id="edit-chuyenDon">
-                    <option value="false">Không</option>
-                    <option value="true">Có</option>
-                </select>
-                <input type="text" id="edit-chuyenDonText" placeholder="Chuyển đến đơn vị" style="flex:1.5;">
-            </div>
-            <div class="edit-form-row">
-                <label>Ghi chú:</label>
-                <textarea id="edit-ghiChu" rows="2"></textarea>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel" id="closeEditBtn">Hủy</button>
-                <button type="submit" class="btn-save"><i class="fas fa-save"></i> Lưu cập nhật</button>
-            </div>
-        </form>
+        <div class="modal-header">
+            <h3><i class="fas fa-pen-alt"></i> CHỈNH SỬA ĐƠN</h3>
+            <button class="modal-close-icon" id="closeEditHeaderBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="editForm">
+                <input type="hidden" id="edit-order-id">
+                <div class="edit-form-row">
+                    <label>Ngày nhận:</label>
+                    <input type="text" id="edit-ngayNhanDon" placeholder="DD/MM/YYYY">
+                </div>
+                <div class="edit-form-row">
+                    <label>Họ tên:</label>
+                    <input type="text" id="edit-hoTen">
+                </div>
+                <div class="edit-form-row">
+                    <label>CCCD:</label>
+                    <input type="text" id="edit-cccd">
+                </div>
+                <div class="edit-form-row">
+                    <label>Địa chỉ:</label>
+                    <input type="text" id="edit-diaChi">
+                </div>
+                <div class="edit-form-row">
+                    <label>Phân loại:</label>
+                    <select id="edit-phanLoai"></select>
+                </div>
+                <div class="edit-form-row">
+                    <label>Nội dung:</label>
+                    <textarea id="edit-noiDung" rows="3"></textarea>
+                </div>
+                <div class="edit-form-row">
+                    <label>Cơ quan:</label>
+                    <input type="text" id="edit-coQuan">
+                </div>
+                <div class="edit-form-row">
+                    <label>Trả lời:</label>
+                    <input type="text" id="edit-traLoi" placeholder="Nội dung trả lời">
+                </div>
+                <div class="edit-form-row">
+                    <label>Thụ lý:</label>
+                    <select id="edit-thuLy">
+                        <option value="false">Không</option>
+                        <option value="true">Có</option>
+                    </select>
+                    <input type="text" id="edit-thuLyText" placeholder="Ghi chú thụ lý" style="flex:1.5;">
+                </div>
+                <div class="edit-form-row">
+                    <label>Trả đơn:</label>
+                    <select id="edit-traDon">
+                        <option value="false">Không</option>
+                        <option value="true">Có</option>
+                    </select>
+                    <input type="text" id="edit-traDonText" placeholder="Lý do trả đơn" style="flex:1.5;">
+                </div>
+                <div class="edit-form-row">
+                    <label>Chuyển đơn:</label>
+                    <select id="edit-chuyenDon">
+                        <option value="false">Không</option>
+                        <option value="true">Có</option>
+                    </select>
+                    <input type="text" id="edit-chuyenDonText" placeholder="Chuyển đến đơn vị" style="flex:1.5;">
+                </div>
+                <div class="edit-form-row">
+                    <label>Ghi chú:</label>
+                    <textarea id="edit-ghiChu" rows="2"></textarea>
+                </div>
+                <div class="modal-actions" style="padding: 16px 0 0 0;">
+                    <button type="button" class="btn-cancel" id="closeEditBtn">Hủy</button>
+                    <button type="submit" class="btn-save" style="background:#10b981; color:white"><i class="fas fa-save"></i> Lưu cập nhật</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -618,7 +738,6 @@
             filterSelect.appendChild(option);
         });
 
-        // Cập nhật dropdown cho edit form
         const editSelect = document.getElementById('edit-phanLoai');
         editSelect.innerHTML = '';
         loaiDonList.forEach(loai => {
@@ -712,7 +831,6 @@
         });
         tbody.innerHTML = html;
         
-        // Gắn sự kiện cho nút xem
         document.querySelectorAll('.btn-view').forEach(btn => {
             btn.addEventListener('click', () => {
                 const order = allOrders.find(o => o.id === btn.getAttribute('data-id'));
@@ -720,7 +838,6 @@
             });
         });
         
-        // Gắn sự kiện cho nút sửa
         document.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', () => {
                 const order = allOrders.find(o => o.id === btn.getAttribute('data-id'));
@@ -728,7 +845,6 @@
             });
         });
         
-        // Gắn sự kiện xóa
         document.querySelectorAll('.btn-delete-order').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
@@ -740,7 +856,75 @@
         });
     }
 
-    // Mở modal chỉnh sửa và điền dữ liệu
+    // Chi tiết đơn với giao diện đẹp, 2 cột
+    function showDetail(order) {
+        const trangThaiText = order.thuLy ? 'Đã thụ lý' : (order.traDon ? 'Trả đơn' : (order.chuyenDon ? 'Chuyển đơn' : 'Đang xử lý'));
+        const statusClass = order.thuLy ? '#2e7d32' : (order.traDon ? '#b45309' : (order.chuyenDon ? '#2563eb' : '#f59e0b'));
+        
+        const detailHtml = `
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-hashtag"></i> Mã đơn</div>
+                    <div class="detail-value"><strong>#${order.id}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="far fa-calendar-alt"></i> Ngày nhận</div>
+                    <div class="detail-value">${order.ngayNhanDon || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-user"></i> Họ tên</div>
+                    <div class="detail-value">${escapeHtml(order.hoTen || '—')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-id-card"></i> CCCD</div>
+                    <div class="detail-value">${order.cccd || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Địa chỉ</div>
+                    <div class="detail-value">${escapeHtml(order.diaChi || '—')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-tag"></i> Phân loại</div>
+                    <div class="detail-value"><span class="badge-status">${escapeHtml(order.phanLoai || '—')}</span></div>
+                </div>
+                <div class="detail-item-full">
+                    <div class="detail-label"><i class="fas fa-file-alt"></i> Nội dung</div>
+                    <div class="detail-value">${escapeHtml(order.noiDung || '—')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-building"></i> Cơ quan</div>
+                    <div class="detail-value">${order.coQuan || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-check-circle"></i> Trạng thái</div>
+                    <div class="detail-value"><span class="status-badge-detail" style="background:#fef3c7; color:#b45309;">${trangThaiText}</span></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-reply"></i> Trả lời</div>
+                    <div class="detail-value">${order.traLoi ? (order.traLoi + (order.traLoiText ? ': ' + order.traLoiText : '')) : '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-gavel"></i> Thụ lý</div>
+                    <div class="detail-value">${order.thuLy ? 'Có' : 'Không'} ${order.thuLyText ? '<span style="color:#64748b; font-size:0.7rem;">(' + escapeHtml(order.thuLyText) + ')</span>' : ''}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-undo-alt"></i> Trả đơn</div>
+                    <div class="detail-value">${order.traDon ? 'Có' : 'Không'} ${order.traDonText ? '<span style="color:#64748b; font-size:0.7rem;">(' + escapeHtml(order.traDonText) + ')</span>' : ''}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label"><i class="fas fa-share"></i> Chuyển đơn</div>
+                    <div class="detail-value">${order.chuyenDon ? 'Có' : 'Không'} ${order.chuyenDonText ? '<span style="color:#64748b; font-size:0.7rem;">(' + escapeHtml(order.chuyenDonText) + ')</span>' : ''}</div>
+                </div>
+                <div class="detail-item-full">
+                    <div class="detail-label"><i class="fas fa-sticky-note"></i> Ghi chú</div>
+                    <div class="detail-value">${escapeHtml(order.ghiChu || '—')}</div>
+                </div>
+            </div>
+        `;
+        document.getElementById('detail-content').innerHTML = detailHtml;
+        document.getElementById('detailModal').classList.add('active');
+    }
+
     function openEditModal(order) {
         document.getElementById('edit-order-id').value = order.id;
         document.getElementById('edit-ngayNhanDon').value = order.ngayNhanDon || '';
@@ -751,28 +935,13 @@
         document.getElementById('edit-noiDung').value = order.noiDung || '';
         document.getElementById('edit-coQuan').value = order.coQuan || '';
         document.getElementById('edit-traLoi').value = order.traLoi || '';
-        document.getElementById('edit-traLoiText')?.value ? console.log('skip') : null;
-        // Mở rộng một số field nếu chưa có trên form (chuẩn bị)
-        const traLoiTextInput = document.createElement('input');
-        if (!document.getElementById('edit-traLoiText')) {
-            // Thêm input cho trả lời text nếu cần - nhưng trong form đã có sẵn rồi
-        }
-        document.getElementById('edit-traLoi').value = order.traLoi || '';
-        // các field text bổ sung
-        let thuLySelect = document.getElementById('edit-thuLy');
-        thuLySelect.value = order.thuLy === true ? 'true' : 'false';
+        document.getElementById('edit-thuLy').value = order.thuLy === true ? 'true' : 'false';
         document.getElementById('edit-thuLyText').value = order.thuLyText || '';
-        
-        let traDonSelect = document.getElementById('edit-traDon');
-        traDonSelect.value = order.traDon === true ? 'true' : 'false';
+        document.getElementById('edit-traDon').value = order.traDon === true ? 'true' : 'false';
         document.getElementById('edit-traDonText').value = order.traDonText || '';
-        
-        let chuyenDonSelect = document.getElementById('edit-chuyenDon');
-        chuyenDonSelect.value = order.chuyenDon === true ? 'true' : 'false';
+        document.getElementById('edit-chuyenDon').value = order.chuyenDon === true ? 'true' : 'false';
         document.getElementById('edit-chuyenDonText').value = order.chuyenDonText || '';
-        
         document.getElementById('edit-ghiChu').value = order.ghiChu || '';
-        
         document.getElementById('editModal').classList.add('active');
     }
 
@@ -799,51 +968,27 @@
             ghiChu: document.getElementById('edit-ghiChu').value
         };
         
-        // Giữ lại các trường có thể không có trong form cũ như namNhanDon? nhưng không ảnh hưởng
         try {
             await update(ref(db, `tiepnhandon/${currentUser.uid}/${orderId}`), updatedData);
             showToast(`Đã cập nhật đơn #${orderId}`);
             document.getElementById('editModal').classList.remove('active');
-            // loadOrders sẽ tự động cập nhật vì onValue realtime
         } catch (error) {
-            console.error(error);
             showToast('Lỗi cập nhật!', true);
         }
     }
 
     function exportToExcel(orders, filename) {
         const data = orders.map(o => ({
-            'Mã đơn': o.id, 'Ngày nhận': o.ngayNhanDon || '', 'Năm nhận': o.namNhanDon || '',
-            'Họ tên': o.hoTen || '', 'CCCD': o.cccd || '', 'Địa chỉ': o.diaChi || '',
-            'Phân loại': o.phanLoai || '', 'Nội dung': o.noiDung || '',
-            'Cơ quan': o.coQuan || '', 'Ngày trả': o.ngayTra || '',
-            'Thụ lý': o.thuLy ? 'Có' : 'Không', 'Trả đơn': o.traDon ? 'Có' : 'Không', 'Chuyển đơn': o.chuyenDon ? 'Có' : 'Không'
+            'Mã đơn': o.id, 'Ngày nhận': o.ngayNhanDon || '', 'Họ tên': o.hoTen || '', 'CCCD': o.cccd || '',
+            'Địa chỉ': o.diaChi || '', 'Phân loại': o.phanLoai || '', 'Nội dung': o.noiDung || '',
+            'Cơ quan': o.coQuan || '', 'Trả lời': o.traLoi || '', 'Thụ lý': o.thuLy ? 'Có' : 'Không',
+            'Trả đơn': o.traDon ? 'Có' : 'Không', 'Chuyển đơn': o.chuyenDon ? 'Có' : 'Không', 'Ghi chú': o.ghiChu || ''
         }));
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đơn');
         XLSX.writeFile(wb, filename);
         showToast(`Xuất ${orders.length} đơn`);
-    }
-
-    function showDetail(order) {
-        const detailDiv = document.getElementById('detail-content');
-        detailDiv.innerHTML = `
-            <div class="detail-row"><span class="detail-label">Mã đơn:</span> #${order.id}</div>
-            <div class="detail-row"><span class="detail-label">Ngày nhận:</span> ${order.ngayNhanDon || '—'}</div>
-            <div class="detail-row"><span class="detail-label">Họ tên:</span> ${escapeHtml(order.hoTen || '—')}</div>
-            <div class="detail-row"><span class="detail-label">CCCD:</span> ${order.cccd || '—'}</div>
-            <div class="detail-row"><span class="detail-label">Địa chỉ:</span> ${escapeHtml(order.diaChi || '—')}</div>
-            <div class="detail-row"><span class="detail-label">Phân loại:</span> ${escapeHtml(order.phanLoai || '—')}</div>
-            <div class="detail-row"><span class="detail-label">Nội dung:</span> ${escapeHtml(order.noiDung || '—')}</div>
-            <div class="detail-row"><span class="detail-label">Cơ quan:</span> ${order.coQuan || '—'}</div>
-            <div class="detail-row"><span class="detail-label">Trả lời:</span> ${order.traLoi || '—'} ${order.traLoiText ? ': ' + order.traLoiText : ''}</div>
-            <div class="detail-row"><span class="detail-label">Thụ lý:</span> ${order.thuLy ? 'Có' : 'Không'} ${order.thuLyText ? ': ' + order.thuLyText : ''}</div>
-            <div class="detail-row"><span class="detail-label">Trả đơn:</span> ${order.traDon ? 'Có' : 'Không'} ${order.traDonText ? ': ' + order.traDonText : ''}</div>
-            <div class="detail-row"><span class="detail-label">Chuyển đơn:</span> ${order.chuyenDon ? 'Có' : 'Không'} ${order.chuyenDonText ? ': ' + order.chuyenDonText : ''}</div>
-            <div class="detail-row"><span class="detail-label">Ghi chú:</span> ${escapeHtml(order.ghiChu || '—')}</div>
-        `;
-        document.getElementById('detailModal').classList.add('active');
     }
 
     async function handleLogout() {
@@ -903,17 +1048,18 @@
         if (filtered.length) exportToExcel(filtered, `ket_qua_loc_${new Date().toISOString().slice(0,10)}.xlsx`);
         else showToast('Không có dữ liệu để xuất', true);
     });
-    document.getElementById('closeDetailBtn').addEventListener('click', () => {
-        document.getElementById('detailModal').classList.remove('active');
-    });
-    document.getElementById('closeEditBtn').addEventListener('click', () => {
-        document.getElementById('editModal').classList.remove('active');
-    });
+    
+    const closeDetail = () => document.getElementById('detailModal').classList.remove('active');
+    const closeEdit = () => document.getElementById('editModal').classList.remove('active');
+    document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
+    document.getElementById('closeDetailHeaderBtn').addEventListener('click', closeDetail);
+    document.getElementById('closeEditBtn').addEventListener('click', closeEdit);
+    document.getElementById('closeEditHeaderBtn').addEventListener('click', closeEdit);
     document.getElementById('editForm').addEventListener('submit', saveEditedOrder);
     document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFilterAndRender(); });
     window.addEventListener('click', (e) => { 
-        if (e.target === document.getElementById('detailModal')) document.getElementById('detailModal').classList.remove('active');
-        if (e.target === document.getElementById('editModal')) document.getElementById('editModal').classList.remove('active');
+        if (e.target === document.getElementById('detailModal')) closeDetail();
+        if (e.target === document.getElementById('editModal')) closeEdit();
     });
 </script>
 </body>
