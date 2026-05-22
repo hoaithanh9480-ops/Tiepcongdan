@@ -6,6 +6,274 @@
     <title>Đăng nhập & Đăng ký - Hệ thống xác thực Firebase</title>
     <!-- Google Fonts & Simple CSS Reset -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs (v9 modular style nhưng dùng compatibility cho nhanh, nhưng vẫn dùng v9+ để dễ) -->
+    <script type="module">
+        // Import Firebase modules (modular SDK v9+)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, update, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Cấu hình Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
+            authDomain: "chamcong-9385e.firebaseapp.com",
+            databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chamcong-9385e",
+            storageBucket: "chamcong-9385e.firebasestorage.app",
+            messagingSenderId: "416187735141",
+            appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
+        };
+
+        // Khởi tạo Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // DOM elements
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegisterLink = document.getElementById('show-register');
+        const showLoginLink = document.getElementById('show-login');
+        const loginContainer = document.getElementById('login-container');
+        const registerContainer = document.getElementById('register-container');
+        const userDashboard = document.getElementById('user-dashboard');
+        const dashboardUserEmail = document.getElementById('dashboard-user-email');
+        const dashboardUserId = document.getElementById('dashboard-user-id');
+        const userInfoFromDb = document.getElementById('user-info-from-db');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        // Thông báo
+        const loginMessage = document.getElementById('login-message');
+        const registerMessage = document.getElementById('register-message');
+        const dashboardMessage = document.getElementById('dashboard-message');
+
+        // Helper hiển thị thông báo
+        function showMessage(element, text, isError = true) {
+            element.textContent = text;
+            element.style.color = isError ? '#dc2626' : '#16a34a';
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 4000);
+        }
+
+        // Hàm lưu thông tin người dùng vào Realtime Database theo UID
+        // Khi đăng ký: lưu email, fullName (nếu có), createdAt
+        async function saveUserToDatabase(userId, email, fullName = '') {
+            try {
+                const userRef = ref(database, `users/${userId}`);
+                // Kiểm tra nếu chưa tồn tại thì tạo mới, nếu tồn tại thì cập nhật thêm trường (tránh ghi đè)
+                const snapshot = await get(userRef);
+                const userData = {
+                    email: email,
+                    fullName: fullName || email.split('@')[0],
+                    lastLogin: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                if (!snapshot.exists()) {
+                    // Lần đầu tạo tài khoản: thêm createdAt
+                    userData.createdAt = new Date().toISOString();
+                    await set(userRef, userData);
+                } else {
+                    // Cập nhật lastLogin và updatedAt
+                    await update(userRef, {
+                        lastLogin: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+                console.log('Lưu / cập nhật dữ liệu user thành công');
+                return true;
+            } catch (error) {
+                console.error("Lỗi lưu database:", error);
+                return false;
+            }
+        }
+
+        // Lấy thông tin user từ DB để hiển thị
+        async function loadUserProfile(user) {
+            if (!user) return;
+            try {
+                const userRef = ref(database, `users/${user.uid}`);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    userInfoFromDb.innerHTML = `
+                        <strong>📇 Hồ sơ từ Database:</strong><br>
+                        👤 Tên: ${data.fullName || 'Chưa cập nhật'}<br>
+                        📧 Email: ${data.email}<br>
+                        🕒 Tạo tài khoản: ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}<br>
+                        🔄 Lần đăng nhập gần nhất: ${data.lastLogin ? new Date(data.lastLogin).toLocaleString() : 'N/A'}
+                    `;
+                } else {
+                    userInfoFromDb.innerHTML = `⚠️ Chưa có dữ liệu bổ sung. Hãy cập nhật hồ sơ.`;
+                    // Nếu chưa có, tạo mới để đồng bộ
+                    await saveUserToDatabase(user.uid, user.email, user.displayName || '');
+                }
+            } catch (err) {
+                console.error(err);
+                userInfoFromDb.innerHTML = `Lỗi tải dữ liệu: ${err.message}`;
+            }
+        }
+
+        // Cập nhật giao diện khi đăng nhập thành công
+        async function onLoginSuccess(user) {
+            // Lưu thông tin đăng nhập, cập nhật lastLogin
+            await saveUserToDatabase(user.uid, user.email);
+            await loadUserProfile(user);
+            dashboardUserEmail.textContent = user.email;
+            dashboardUserId.textContent = user.uid;
+            // Ẩn form đăng nhập/đăng ký, hiện dashboard
+            loginContainer.style.display = 'none';
+            registerContainer.style.display = 'none';
+            userDashboard.style.display = 'block';
+            showMessage(dashboardMessage, `✅ Đăng nhập thành công! Chào ${user.email}`, false);
+        }
+
+        // Đăng xuất
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                // Reset giao diện
+                loginContainer.style.display = 'block';
+                registerContainer.style.display = 'none';
+                userDashboard.style.display = 'none';
+                // Xóa nội dung form
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-password').value = '';
+                document.getElementById('register-email').value = '';
+                document.getElementById('register-password').value = '';
+                document.getElementById('register-fullname').value = '';
+                showMessage(loginMessage, '👋 Bạn đã đăng xuất.', false);
+            } catch (error) {
+                console.error("Lỗi đăng xuất:", error);
+                showMessage(dashboardMessage, `Lỗi: ${error.message}`, true);
+            }
+        }
+
+        // Xử lý đăng ký tài khoản mới (có lưu thêm fullname vào database)
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const fullName = document.getElementById('register-fullname').value.trim();
+
+            if (password.length < 6) {
+                showMessage(registerMessage, 'Mật khẩu phải có ít nhất 6 ký tự.', true);
+                return;
+            }
+
+            try {
+                // Tạo user với email/password
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                // Lưu thêm fullName vào Realtime Database theo UID
+                const userRef = ref(database, `users/${user.uid}`);
+                await set(userRef, {
+                    email: email,
+                    fullName: fullName || email.split('@')[0],
+                    createdAt: new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+                showMessage(registerMessage, '🎉 Đăng ký thành công! Đang chuyển hướng...', false);
+                // Reset form register
+                registerForm.reset();
+                // Sau đăng ký, tự động chuyển sang dashboard (vì onAuthStateChanged sẽ kích hoạt)
+                // nhưng cần đảm bảo giao diện cập nhật
+            } catch (error) {
+                let errorMsg = error.message;
+                if (error.code === 'auth/email-already-in-use') errorMsg = 'Email đã được sử dụng. Vui lòng đăng nhập.';
+                else if (error.code === 'auth/invalid-email') errorMsg = 'Email không hợp lệ.';
+                else if (error.code === 'auth/weak-password') errorMsg = 'Mật khẩu quá yếu.';
+                showMessage(registerMessage, `❌ ${errorMsg}`, true);
+            }
+        });
+
+        // Xử lý đăng nhập
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showMessage(loginMessage, 'Vui lòng nhập email và mật khẩu.', true);
+                return;
+            }
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Thành công: onAuthStateChanged sẽ lo việc cập nhật giao diện
+                // Chỉ hiển thị thông báo ngắn
+                showMessage(loginMessage, 'Đăng nhập thành công!', false);
+                loginForm.reset();
+                // Chuyển sang dashboard.html
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1000);
+            } catch (error) {
+                let errorMsg = 'Sai email hoặc mật khẩu.';
+                if (error.code === 'auth/user-not-found') errorMsg = 'Không tìm thấy tài khoản.';
+                else if (error.code === 'auth/wrong-password') errorMsg = 'Mật khẩu không chính xác.';
+                else if (error.code === 'auth/invalid-email') errorMsg = 'Email không hợp lệ.';
+                else if (error.code === 'auth/too-many-requests') errorMsg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau.';
+                showMessage(loginMessage, `❌ ${errorMsg}`, true);
+            }
+        });
+
+        // Chuyển tab đăng ký / đăng nhập
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginContainer.style.display = 'none';
+            registerContainer.style.display = 'block';
+            userDashboard.style.display = 'none';
+            // Xóa thông báo
+            loginMessage.style.display = 'none';
+            registerMessage.style.display = 'none';
+        });
+
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginContainer.style.display = 'block';
+            registerContainer.style.display = 'none';
+            userDashboard.style.display = 'none';
+            loginMessage.style.display = 'none';
+            registerMessage.style.display = 'none';
+        });
+
+        logoutBtn.addEventListener('click', handleLogout);
+
+        // Theo dõi trạng thái đăng nhập toàn cục
+        onAuthStateChanged(auth, async (user) => {
+
+    if (user) {
+
+        // Đã đăng nhập
+        await saveUserToDatabase(user.uid, user.email);
+
+        // Chuyển sang dashboard.html
+        if (!window.location.pathname.includes('dashboard.html')) {
+            window.location.href = "dashboard.html";
+        }
+
+    } else {
+
+        // Chưa đăng nhập
+        loginContainer.style.display = 'block';
+        registerContainer.style.display = 'none';
+        userDashboard.style.display = 'none';
+
+        dashboardMessage.style.display = 'none';
+    }
+
+});
+
+        // Khởi tạo mặc định
+        // Đảm bảo realtime database rule gợi ý (người dùng chỉ có thể đọc/ghi dữ liệu của mình)
+        // Đoạn code này không can thiệp rule, nhưng sẽ note trong comment hướng dẫn
+        
+        // Xử lý responsive & bổ sung meta
+        console.log("Ứng dụng đã sẵn sàng, Firebase + Realtime Database + Auth hoạt động");
+    </script>
     <style>
         * {
             margin: 0;
@@ -23,6 +291,7 @@
             padding: 20px;
         }
 
+        /* Card chính */
         .app-card {
             max-width: 500px;
             width: 100%;
@@ -120,15 +389,6 @@
             transform: none;
         }
 
-        .danger-btn {
-            background: #dc2626;
-            color: white;
-        }
-
-        .danger-btn:hover {
-            background: #b91c1c;
-        }
-
         .link-text {
             text-align: center;
             margin-top: 24px;
@@ -156,6 +416,7 @@
             display: none;
         }
 
+        /* Dashboard */
         .dashboard-info {
             background: #f8fafc;
             border-radius: 28px;
@@ -189,42 +450,6 @@
             margin-top: 15px;
         }
 
-        /* Change password section */
-        .change-password-section {
-            background: #fefce8;
-            border-radius: 24px;
-            padding: 18px;
-            margin: 20px 0;
-            border-left: 4px solid #f59e0b;
-        }
-
-        .change-password-section h4 {
-            font-size: 0.9rem;
-            color: #b45309;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .change-password-section .input-group {
-            margin-bottom: 12px;
-        }
-
-        .change-password-section .input-group input {
-            padding: 10px 14px;
-            font-size: 0.85rem;
-        }
-
-        .btn-change-pwd {
-            background: #f59e0b;
-            margin-top: 5px;
-        }
-
-        .btn-change-pwd:hover {
-            background: #d97706;
-        }
-
         footer {
             text-align: center;
             padding: 18px;
@@ -233,7 +458,6 @@
             border-top: 1px solid #edf2f7;
             background: #ffffffd0;
         }
-
         @media (max-width: 550px) {
             .form-container {
                 padding: 24px 20px;
@@ -245,30 +469,11 @@
                 width: 80px;
             }
         }
-
         .hidden {
             display: none;
         }
-
         button:active {
             transform: scale(0.97);
-        }
-
-        /* Loading spinner nhỏ */
-        .loading-spinner {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid #ffffff;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -276,6 +481,7 @@
 <div class="app-card">
     <div class="header">
         <h1>TIẾP CÔNG DÂN</h1>
+        <!-- <p>Đăng nhập hoặc tạo tài khoản mới</p> -->
     </div>
 
     <!-- Form Đăng nhập -->
@@ -289,10 +495,10 @@
                 <label>🔒 Mật khẩu</label>
                 <input type="password" id="login-password" placeholder="••••••••" autocomplete="new-password" required>
             </div>
-            <button type="submit" id="login-submit-btn">Đăng nhập</button>
-            <div class="link-text">
+            <button type="submit">Đăng nhập</button>
+            <!-- <div class="link-text"> 
                 Chưa có tài khoản? <a href="#" id="show-register">Đăng ký ngay</a>
-            </div>
+            </div> -->
             <div id="login-message" class="message"></div>
         </form>
     </div>
@@ -330,26 +536,6 @@
         <div id="user-info-from-db" class="user-profile-card">
             ⏳ Đang tải thông tin...
         </div>
-
-        <!-- Phần đổi mật khẩu -->
-        <div class="change-password-section">
-            <h4><i class="fas fa-key"></i> 🔐 Đổi mật khẩu</h4>
-            <div class="input-group">
-                <label>Mật khẩu hiện tại</label>
-                <input type="password" id="current-password" placeholder="Nhập mật khẩu hiện tại">
-            </div>
-            <div class="input-group">
-                <label>Mật khẩu mới</label>
-                <input type="password" id="new-password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)">
-            </div>
-            <div class="input-group">
-                <label>Xác nhận mật khẩu mới</label>
-                <input type="password" id="confirm-new-password" placeholder="Nhập lại mật khẩu mới">
-            </div>
-            <button id="change-password-btn" class="btn-change-pwd">Đổi mật khẩu</button>
-            <div id="change-pwd-message" class="message" style="margin-top: 12px;"></div>
-        </div>
-
         <button id="logout-btn" class="secondary-btn">🚪 Đăng xuất</button>
         <div id="dashboard-message" class="message"></div>
     </div>
@@ -358,354 +544,9 @@
     </footer>
 </div>
 
-<!-- Font Awesome cho icon -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+<!-- Hướng dẫn chỉnh sửa Rule trong Realtime Database (hiển thị console log và gợi ý) -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    // Cấu hình Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
-        authDomain: "chamcong-9385e.firebaseapp.com",
-        databaseURL: "https://chamcong-9385e-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "chamcong-9385e",
-        storageBucket: "chamcong-9385e.firebasestorage.app",
-        messagingSenderId: "416187735141",
-        appId: "1:416187735141:web:e0a6010118ae5ce5b47a8c"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
-
-    // DOM elements
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const showRegisterLink = document.getElementById('show-register');
-    const showLoginLink = document.getElementById('show-login');
-    const loginContainer = document.getElementById('login-container');
-    const registerContainer = document.getElementById('register-container');
-    const userDashboard = document.getElementById('user-dashboard');
-    const dashboardUserEmail = document.getElementById('dashboard-user-email');
-    const dashboardUserId = document.getElementById('dashboard-user-id');
-    const userInfoFromDb = document.getElementById('user-info-from-db');
-    const logoutBtn = document.getElementById('logout-btn');
-    const changePasswordBtn = document.getElementById('change-password-btn');
-    const currentPasswordInput = document.getElementById('current-password');
-    const newPasswordInput = document.getElementById('new-password');
-    const confirmNewPasswordInput = document.getElementById('confirm-new-password');
-    const changePwdMessage = document.getElementById('change-pwd-message');
-
-    // Thông báo
-    const loginMessage = document.getElementById('login-message');
-    const registerMessage = document.getElementById('register-message');
-    const dashboardMessage = document.getElementById('dashboard-message');
-
-    function showMessage(element, text, isError = true) {
-        element.textContent = text;
-        element.style.color = isError ? '#dc2626' : '#16a34a';
-        element.style.backgroundColor = isError ? '#fef2f2' : '#f0fdf4';
-        element.style.display = 'block';
-        setTimeout(() => {
-            element.style.display = 'none';
-        }, 5000);
-    }
-
-    // Lưu thông tin người dùng vào Realtime Database
-    async function saveUserToDatabase(userId, email, fullName = '') {
-        try {
-            const userRef = ref(database, `users/${userId}`);
-            const snapshot = await get(userRef);
-            const userData = {
-                email: email,
-                fullName: fullName || email.split('@')[0],
-                lastLogin: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            if (!snapshot.exists()) {
-                userData.createdAt = new Date().toISOString();
-                await set(userRef, userData);
-            } else {
-                await update(userRef, {
-                    lastLogin: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                });
-            }
-            return true;
-        } catch (error) {
-            console.error("Lỗi lưu database:", error);
-            return false;
-        }
-    }
-
-    // Lấy thông tin user từ DB
-    async function loadUserProfile(user) {
-        if (!user) return;
-        try {
-            const userRef = ref(database, `users/${user.uid}`);
-            const snapshot = await get(userRef);
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                userInfoFromDb.innerHTML = `
-                    <strong>📇 Hồ sơ từ Database:</strong><br>
-                    👤 Tên: ${data.fullName || 'Chưa cập nhật'}<br>
-                    📧 Email: ${data.email}<br>
-                    🕒 Tạo tài khoản: ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}<br>
-                    🔄 Lần đăng nhập gần nhất: ${data.lastLogin ? new Date(data.lastLogin).toLocaleString() : 'N/A'}
-                `;
-            } else {
-                userInfoFromDb.innerHTML = `⚠️ Chưa có dữ liệu bổ sung. Hãy cập nhật hồ sơ.`;
-                await saveUserToDatabase(user.uid, user.email, '');
-            }
-        } catch (err) {
-            console.error(err);
-            userInfoFromDb.innerHTML = `Lỗi tải dữ liệu: ${err.message}`;
-        }
-    }
-
-    // Hàm đổi mật khẩu
-    async function changeUserPassword(currentPwd, newPwd, confirmPwd) {
-        // Validate
-        if (!currentPwd || !newPwd || !confirmPwd) {
-            showMessage(changePwdMessage, 'Vui lòng điền đầy đủ thông tin', true);
-            return false;
-        }
-        if (newPwd.length < 6) {
-            showMessage(changePwdMessage, 'Mật khẩu mới phải có ít nhất 6 ký tự', true);
-            return false;
-        }
-        if (newPwd !== confirmPwd) {
-            showMessage(changePwdMessage, 'Mật khẩu mới và xác nhận không khớp', true);
-            return false;
-        }
-        if (currentPwd === newPwd) {
-            showMessage(changePwdMessage, 'Mật khẩu mới không được trùng với mật khẩu hiện tại', true);
-            return false;
-        }
-
-        const user = auth.currentUser;
-        if (!user || !user.email) {
-            showMessage(changePwdMessage, 'Không tìm thấy người dùng. Vui lòng đăng nhập lại', true);
-            return false;
-        }
-
-        // Hiển thị trạng thái loading
-        const originalBtnText = changePasswordBtn.innerHTML;
-        changePasswordBtn.innerHTML = 'Đang xử lý... <span class="loading-spinner"></span>';
-        changePasswordBtn.disabled = true;
-
-        try {
-            // Xác thực lại người dùng với mật khẩu hiện tại
-            const credential = EmailAuthProvider.credential(user.email, currentPwd);
-            await reauthenticateWithCredential(user, credential);
-            // Đổi mật khẩu
-            await updatePassword(user, newPwd);
-            showMessage(changePwdMessage, '✅ Đổi mật khẩu thành công! Vui lòng đăng nhập lại.', false);
-            // Clear input
-            currentPasswordInput.value = '';
-            newPasswordInput.value = '';
-            confirmNewPasswordInput.value = '';
-            // Tự động đăng xuất sau 2 giây để đăng nhập lại bằng mật khẩu mới
-            setTimeout(async () => {
-                await signOut(auth);
-                // Reset giao diện
-                loginContainer.style.display = 'block';
-                registerContainer.style.display = 'none';
-                userDashboard.style.display = 'none';
-                showMessage(loginMessage, 'Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.', false);
-            }, 2000);
-            return true;
-        } catch (error) {
-            console.error("Lỗi đổi mật khẩu:", error);
-            let errorMsg = 'Đổi mật khẩu thất bại. ';
-            if (error.code === 'auth/wrong-password') {
-                errorMsg = 'Mật khẩu hiện tại không chính xác.';
-            } else if (error.code === 'auth/weak-password') {
-                errorMsg = 'Mật khẩu mới quá yếu, vui lòng chọn mật khẩu mạnh hơn.';
-            } else if (error.code === 'auth/requires-recent-login') {
-                errorMsg = 'Phiên đăng nhập đã lâu, vui lòng đăng xuất và đăng nhập lại để đổi mật khẩu.';
-            } else {
-                errorMsg += error.message;
-            }
-            showMessage(changePwdMessage, errorMsg, true);
-            return false;
-        } finally {
-            changePasswordBtn.innerHTML = originalBtnText;
-            changePasswordBtn.disabled = false;
-        }
-    }
-
-    // Cập nhật giao diện khi đăng nhập thành công
-    async function onLoginSuccess(user) {
-        await saveUserToDatabase(user.uid, user.email);
-        await loadUserProfile(user);
-        dashboardUserEmail.textContent = user.email;
-        dashboardUserId.textContent = user.uid;
-        loginContainer.style.display = 'none';
-        registerContainer.style.display = 'none';
-        userDashboard.style.display = 'block';
-        // Reset các trường đổi mật khẩu
-        currentPasswordInput.value = '';
-        newPasswordInput.value = '';
-        confirmNewPasswordInput.value = '';
-        changePwdMessage.style.display = 'none';
-        showMessage(dashboardMessage, `✅ Đăng nhập thành công! Chào ${user.email}`, false);
-    }
-
-    // Đăng xuất
-    async function handleLogout() {
-        try {
-            await signOut(auth);
-            loginContainer.style.display = 'block';
-            registerContainer.style.display = 'none';
-            userDashboard.style.display = 'none';
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-password').value = '';
-            document.getElementById('register-email').value = '';
-            document.getElementById('register-password').value = '';
-            document.getElementById('register-fullname').value = '';
-            // Reset change password message
-            changePwdMessage.style.display = 'none';
-            showMessage(loginMessage, '👋 Bạn đã đăng xuất.', false);
-        } catch (error) {
-            console.error("Lỗi đăng xuất:", error);
-            showMessage(dashboardMessage, `Lỗi: ${error.message}`, true);
-        }
-    }
-
-    // Đăng ký
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('register-email').value.trim();
-        const password = document.getElementById('register-password').value;
-        const fullName = document.getElementById('register-fullname').value.trim();
-
-        if (password.length < 6) {
-            showMessage(registerMessage, 'Mật khẩu phải có ít nhất 6 ký tự.', true);
-            return;
-        }
-
-        // Disable button trong lúc xử lý
-        const submitBtn = registerForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = 'Đang xử lý...';
-        submitBtn.disabled = true;
-
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            const userRef = ref(database, `users/${user.uid}`);
-            await set(userRef, {
-                email: email,
-                fullName: fullName || email.split('@')[0],
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            });
-            showMessage(registerMessage, '🎉 Đăng ký thành công! Đang chuyển hướng...', false);
-            registerForm.reset();
-        } catch (error) {
-            let errorMsg = error.message;
-            if (error.code === 'auth/email-already-in-use') errorMsg = 'Email đã được sử dụng. Vui lòng đăng nhập.';
-            else if (error.code === 'auth/invalid-email') errorMsg = 'Email không hợp lệ.';
-            else if (error.code === 'auth/weak-password') errorMsg = 'Mật khẩu quá yếu.';
-            showMessage(registerMessage, `❌ ${errorMsg}`, true);
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    });
-
-    // Đăng nhập
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
-
-        if (!email || !password) {
-            showMessage(loginMessage, 'Vui lòng nhập email và mật khẩu.', true);
-            return;
-        }
-
-        const submitBtn = loginForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = 'Đang xử lý...';
-        submitBtn.disabled = true;
-
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            showMessage(loginMessage, 'Đăng nhập thành công!', false);
-            loginForm.reset();
-            // Không cần chuyển hướng vì onAuthStateChanged sẽ xử lý
-        } catch (error) {
-            let errorMsg = 'Sai email hoặc mật khẩu.';
-            if (error.code === 'auth/user-not-found') errorMsg = 'Không tìm thấy tài khoản.';
-            else if (error.code === 'auth/wrong-password') errorMsg = 'Mật khẩu không chính xác.';
-            else if (error.code === 'auth/invalid-email') errorMsg = 'Email không hợp lệ.';
-            else if (error.code === 'auth/too-many-requests') errorMsg = 'Quá nhiều yêu cầu. Vui lòng thử lại sau.';
-            showMessage(loginMessage, `❌ ${errorMsg}`, true);
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    });
-
-    // Đổi mật khẩu
-    changePasswordBtn.addEventListener('click', async () => {
-        const currentPwd = currentPasswordInput.value;
-        const newPwd = newPasswordInput.value;
-        const confirmPwd = confirmNewPasswordInput.value;
-        await changeUserPassword(currentPwd, newPwd, confirmPwd);
-    });
-
-    // Chuyển tab
-    showRegisterLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginContainer.style.display = 'none';
-        registerContainer.style.display = 'block';
-        userDashboard.style.display = 'none';
-        loginMessage.style.display = 'none';
-        registerMessage.style.display = 'none';
-    });
-
-    showLoginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginContainer.style.display = 'block';
-        registerContainer.style.display = 'none';
-        userDashboard.style.display = 'none';
-        loginMessage.style.display = 'none';
-        registerMessage.style.display = 'none';
-    });
-
-    logoutBtn.addEventListener('click', handleLogout);
-
-    // Theo dõi trạng thái đăng nhập
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            // Người dùng đã đăng nhập
-            await saveUserToDatabase(user.uid, user.email);
-            await onLoginSuccess(user);
-        } else {
-            // Chưa đăng nhập
-            loginContainer.style.display = 'block';
-            registerContainer.style.display = 'none';
-            userDashboard.style.display = 'none';
-            dashboardMessage.style.display = 'none';
-        }
-    });
-
-    // Xóa dữ liệu autofill sau khi trang tải
-    window.addEventListener('load', function() {
-        const emailInput = document.getElementById('login-email');
-        const passwordInput = document.getElementById('login-password');
-        if (emailInput) emailInput.value = '';
-        if (passwordInput) passwordInput.value = '';
-    });
-
-    // Hướng dẫn cấu hình Rule cho Realtime Database
+    // In thêm hướng dẫn cấu hình Rule an toàn cho Realtime Database để chỉ đọc/ghi theo UID
     (function ruleGuidance() {
         console.log("%c🚨 QUAN TRỌNG - CẤU HÌNH RULE cho Realtime Database:", "color: #f97316; font-size: 14px; font-weight: bold;");
         console.log(`Sao chép và dán rule dưới đây vào "Rules" trong Realtime Database (Firebase Console):
@@ -721,6 +562,14 @@
 }
 Điều này đảm bảo mỗi người dùng chỉ có thể truy cập đúng dữ liệu của mình theo ID.`);
     })();
+// Xóa dữ liệu autofill sau khi trang tải
+window.addEventListener('load', function() {
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+});    
 </script>
 </body>
 </html>
