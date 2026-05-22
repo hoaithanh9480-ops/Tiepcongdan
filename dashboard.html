@@ -117,15 +117,10 @@
             font-size: 0.8rem;
         }
 
-        /* Nút Tiếp nhận */
         .btn-action:nth-child(1) { background: #2c7da0; color: white; }
-        /* Nút Đổi mật khẩu */
         .btn-action:nth-child(2) { background: #4b5563; color: white; }
-        /* Nút Thoát */
         .btn-action:nth-child(3) { background: #dc2626; color: white; }
-        /* Nút Làm mới */
         .btn-action:nth-child(4) { background: #f59e0b; color: white; }
-        /* Nút Xuất ALL */
         .btn-action:nth-child(5) { background: #10b981; color: white; }
         
         .btn-action:hover { transform: translateY(-1px); opacity: 0.9; }
@@ -263,7 +258,6 @@
             display: inline-block;
         }
 
-        /* Trạng thái badge cho bảng */
         .badge-status-processing { background: #fef3c7; color: #b45309; }
         .badge-status-thuly { background: #dbeafe; color: #1e40af; }
         .badge-status-tradon { background: #fee2e2; color: #b91c1c; }
@@ -293,7 +287,6 @@
 
         .btn-view:hover, .btn-edit:hover, .btn-delete-order:hover { transform: scale(1.02); opacity: 0.85; }
 
-        /* Modal styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -623,7 +616,16 @@
                 <div class="edit-form-row"><label>Phân loại:</label><select id="edit-phanLoai"></select></div>
                 <div class="edit-form-row"><label>Nội dung:</label><textarea id="edit-noiDung" rows="3"></textarea></div>
                 <div class="edit-form-row"><label>Cơ quan:</label><input type="text" id="edit-coQuan"></div>
-                <div class="edit-form-row"><label>Trả lời:</label><input type="text" id="edit-traLoi" placeholder="Nội dung trả lời"></div>
+                
+                <div class="edit-form-row">
+                    <label>Trả lời:</label>
+                    <select id="edit-traLoiSelect" style="max-width: 150px;">
+                        <option value="Trực tiếp">Trực tiếp</option>
+                        <option value="Văn bản">Văn bản</option>
+                    </select>
+                    <input type="text" id="edit-traLoiText" placeholder="Nhập nội dung văn bản trả lời..." style="flex:1.5; display:none;">
+                </div>
+
                 <div class="edit-form-row"><label>Thụ lý:</label><select id="edit-thuLy"><option value="false">Không</option><option value="true">Có</option></select><input type="text" id="edit-thuLyText" placeholder="Ghi chú thụ lý" style="flex:1.5;"></div>
                 <div class="edit-form-row"><label>Trả đơn:</label><select id="edit-traDon"><option value="false">Không</option><option value="true">Có</option></select><input type="text" id="edit-traDonText" placeholder="Lý do trả đơn" style="flex:1.5;"></div>
                 <div class="edit-form-row"><label>Chuyển đơn:</label><select id="edit-chuyenDon"><option value="false">Không</option><option value="true">Có</option></select><input type="text" id="edit-chuyenDonText" placeholder="Chuyển đến đơn vị" style="flex:1.5;"></div>
@@ -807,6 +809,7 @@
         document.getElementById('detailModal').classList.add('active');
     }
 
+    // Mở modal sửa và nạp dữ liệu cũ vào ô chọn mới
     function openEditModal(order) {
         document.getElementById('edit-order-id').value = order.id;
         document.getElementById('edit-ngayNhanDon').value = order.ngayNhanDon || '';
@@ -816,7 +819,24 @@
         document.getElementById('edit-phanLoai').value = order.phanLoai || '';
         document.getElementById('edit-noiDung').value = order.noiDung || '';
         document.getElementById('edit-coQuan').value = order.coQuan || '';
-        document.getElementById('edit-traLoi').value = order.traLoi || '';
+        
+        // Tách dữ liệu trường Trả lời cũ
+        const rawTraLoi = order.traLoi || '';
+        if (rawTraLoi.toLowerCase() === 'văn bản' || order.traLoiText) {
+            document.getElementById('edit-traLoiSelect').value = 'Văn bản';
+            document.getElementById('edit-traLoiText').value = order.traLoiText || '';
+            document.getElementById('edit-traLoiText').style.display = 'block';
+        } else if (rawTraLoi.toLowerCase() === 'trực tiếp' || rawTraLoi === '') {
+            document.getElementById('edit-traLoiSelect').value = 'Trực tiếp';
+            document.getElementById('edit-traLoiText').value = '';
+            document.getElementById('edit-traLoiText').style.display = 'none';
+        } else {
+            // Nếu dữ liệu cũ lưu chữ khác, mặc định bật Văn bản để bảo toàn nội dung
+            document.getElementById('edit-traLoiSelect').value = 'Văn bản';
+            document.getElementById('edit-traLoiText').value = rawTraLoi;
+            document.getElementById('edit-traLoiText').style.display = 'block';
+        }
+
         document.getElementById('edit-thuLy').value = order.thuLy === true ? 'true' : 'false';
         document.getElementById('edit-thuLyText').value = order.thuLyText || '';
         document.getElementById('edit-traDon').value = order.traDon === true ? 'true' : 'false';
@@ -827,10 +847,22 @@
         document.getElementById('editModal').classList.add('active');
     }
 
+    // Lắng nghe sự thay đổi của ô chọn Trả lời trên giao diện sửa đơn
+    document.getElementById('edit-traLoiSelect').addEventListener('change', (e) => {
+        const textInput = document.getElementById('edit-traLoiText');
+        if (e.target.value === 'Văn bản') {
+            textInput.style.display = 'block';
+        } else {
+            textInput.style.display = 'none';
+            textInput.value = '';
+        }
+    });
+
     async function saveEditedOrder(event) {
         event.preventDefault();
         const orderId = document.getElementById('edit-order-id').value;
         if (!orderId || !currentUser) return;
+        
         const updatedData = {
             ngayNhanDon: document.getElementById('edit-ngayNhanDon').value,
             hoTen: document.getElementById('edit-hoTen').value,
@@ -839,7 +871,11 @@
             phanLoai: document.getElementById('edit-phanLoai').value,
             noiDung: document.getElementById('edit-noiDung').value,
             coQuan: document.getElementById('edit-coQuan').value,
-            traLoi: document.getElementById('edit-traLoi').value,
+            
+            // Đồng bộ dữ liệu Trả lời để lưu lên Firebase
+            traLoi: document.getElementById('edit-traLoiSelect').value,
+            traLoiText: document.getElementById('edit-traLoiText').value,
+
             thuLy: document.getElementById('edit-thuLy').value === 'true',
             thuLyText: document.getElementById('edit-thuLyText').value,
             traDon: document.getElementById('edit-traDon').value === 'true',
@@ -857,18 +893,19 @@
 
     function exportToExcel(orders, filename) {
         const data = orders.map(o => {
-            // 1. Xử lý Thụ lý, Trả đơn, Chuyển đơn (Lấy trạng thái Có kèm nội dung văn bản nếu có)
             const thuLyStatus = o.thuLy ? `Có${o.thuLyText ? ' (' + o.thuLyText + ')' : ''}` : 'Không';
             const traDonStatus = o.traDon ? `Có${o.traDonText ? ' (' + o.traDonText + ')' : ''}` : 'Không';
             const chuyenDonStatus = o.chuyenDon ? `Có${o.chuyenDonText ? ' (' + o.chuyenDonText + ')' : ''}` : 'Không';
 
-            // 2. Xử lý logic phần Trả lời: Nếu trực tiếp -> Không, nếu Văn bản -> có trả lời cụ thể
-            let traLoiStatus = 'Không';
-            if (o.traLoi && o.traLoi.trim().toLowerCase() === 'văn bản') {
-                traLoiStatus = 'Có';
-            } else if (o.traLoi && o.traLoi.trim().toLowerCase() !== 'trực tiếp') {
-                // Trường hợp ô trả lời chứa luôn nội dung text trả lời khác chữ "Trực tiếp"
-                traLoiStatus = o.traLoi;
+            // Xử lý logic phần Trả lời khi xuất Excel theo đúng quy tắc
+            let traLoiStatus = 'Không'; 
+            const phuongThuc = o.traLoi ? o.traLoi.trim().toLowerCase() : '';
+            
+            if (phuongThuc === 'văn bản') {
+                // Nếu là văn bản, xuất ra là chữ Có kèm nội dung chi tiết nếu có đi kèm
+                traLoiStatus = `Có${o.traLoiText ? ' (' + o.traLoiText + ')' : ''}`;
+            } else if (phuongThuc === 'trực tiếp') {
+                traLoiStatus = 'Không';
             }
 
             return { 
@@ -894,7 +931,6 @@
         showToast(`Xuất ${orders.length} đơn`);
     }
 
-    // Hàm xử lý đổi mật khẩu mới thêm
     async function handleUpdatePassword(event) {
         event.preventDefault();
         const newPassword = document.getElementById('new-password').value;
@@ -936,14 +972,12 @@
     onAuthStateChanged(auth, async (user) => { if (user) { currentUser = user; document.querySelector('#user-email-display span').innerText = user.email; populateYears(); await loadLoaiDon(); loadOrders(); } else { window.location.href = "index.html"; } });
     updateClockAndDate(); setInterval(updateClockAndDate, 60000);
     
-    // Sự kiện nút chức năng chính
     document.getElementById('logout-btn-nav').addEventListener('click', handleLogout);
     document.getElementById('refresh-btn').addEventListener('click', () => { loadOrders(); showToast('Đã làm mới'); });
     document.getElementById('apply-filter').addEventListener('click', applyFilterAndRender);
     document.getElementById('export-all-btn').addEventListener('click', () => { if (allOrders.length) exportToExcel(allOrders, `tat_ca_don_${new Date().toISOString().slice(0,10)}.xlsx`); else showToast('Không có dữ liệu', true); });
     document.getElementById('export-filter-btn').addEventListener('click', () => { const month = document.getElementById('filter-month').value; const year = document.getElementById('filter-year').value; const loai = document.getElementById('filter-loai').value; let filtered = [...allOrders]; if (month) filtered = filtered.filter(o => getMonthFromDate(o.ngayNhanDon) === parseInt(month)); if (year) filtered = filtered.filter(o => getYearFromDate(o.ngayNhanDon) === parseInt(year)); if (loai) filtered = filtered.filter(o => o.phanLoai === loai); if (filtered.length) exportToExcel(filtered, `ket_qua_loc_${new Date().toISOString().slice(0,10)}.xlsx`); else showToast('Không có dữ liệu để xuất', true); });
     
-    // Sự kiện đóng mở Modals
     const closeDetail = () => document.getElementById('detailModal').classList.remove('active');
     const closeEdit = () => document.getElementById('editModal').classList.remove('active');
     const openPwd = () => document.getElementById('pwdModal').classList.add('active');
