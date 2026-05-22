@@ -117,10 +117,16 @@
             font-size: 0.8rem;
         }
 
+        /* Nút Tiếp nhận */
         .btn-action:nth-child(1) { background: #2c7da0; color: white; }
-        .btn-action:nth-child(2) { background: #dc2626; color: white; }
-        .btn-action:nth-child(3) { background: #f59e0b; color: white; }
-        .btn-action:nth-child(4) { background: #10b981; color: white; }
+        /* Nút Đổi mật khẩu */
+        .btn-action:nth-child(2) { background: #4b5563; color: white; }
+        /* Nút Thoát */
+        .btn-action:nth-child(3) { background: #dc2626; color: white; }
+        /* Nút Làm mới */
+        .btn-action:nth-child(4) { background: #f59e0b; color: white; }
+        /* Nút Xuất ALL */
+        .btn-action:nth-child(5) { background: #10b981; color: white; }
         
         .btn-action:hover { transform: translateY(-1px); opacity: 0.9; }
 
@@ -536,6 +542,7 @@
 
     <div class="action-buttons">
         <button class="btn-action" onclick="window.location.href='tiepnhandon.html'"><i class="fas fa-plus-circle"></i> TIẾP NHẬN</button>
+        <button class="btn-action" id="change-pwd-btn"><i class="fas fa-key"></i> ĐỔI MẬT KHẨU</button>
         <button class="btn-action" id="logout-btn-nav"><i class="fas fa-sign-out-alt"></i> THOÁT</button>
         <button class="btn-action" id="refresh-btn"><i class="fas fa-sync-alt"></i> LÀM MỚI</button>
         <button class="btn-action" id="export-all-btn"><i class="fas fa-file-excel"></i> XUẤT ALL</button>
@@ -587,7 +594,6 @@
     </div>
 </div>
 
-<!-- Modal chi tiết -->
 <div id="detailModal" class="modal-overlay">
     <div class="modal-card">
         <div class="modal-header">
@@ -601,7 +607,6 @@
     </div>
 </div>
 
-<!-- Modal chỉnh sửa -->
 <div id="editModal" class="modal-overlay">
     <div class="modal-card">
         <div class="modal-header">
@@ -629,11 +634,36 @@
     </div>
 </div>
 
+<div id="pwdModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-key"></i> ĐỔI MẬT KHẨU</h3>
+            <button class="modal-close-icon" id="closePwdHeaderBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="pwdForm">
+                <div class="edit-form-row">
+                    <label style="width: 140px;">Mật khẩu mới:</label>
+                    <input type="password" id="new-password" placeholder="Tối thiểu 6 ký tự" required>
+                </div>
+                <div class="edit-form-row">
+                    <label style="width: 140px;">Xác nhận lại:</label>
+                    <input type="password" id="confirm-password" placeholder="Nhập lại mật khẩu mới" required>
+                </div>
+                <div class="modal-actions" style="padding: 16px 0 0 0;">
+                    <button type="button" class="btn-cancel" id="closePwdBtn">Hủy</button>
+                    <button type="submit" style="background:#2c7da0; color:white; padding: 8px 22px; border-radius: 40px; border: none; font-weight: 600; font-size: 0.75rem; cursor: pointer;"><i class="fas fa-check"></i> Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div id="toastMsg" class="toast-msg"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -667,7 +697,6 @@
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    // Hàm xác định trạng thái đơn hàng theo thứ tự ưu tiên: Chuyển đơn > Trả đơn > Đã thụ lý > Đang xử lý
     function getTrangThai(order) {
         if (order.chuyenDon === true) return { text: 'Chuyển đơn', class: 'badge-status-chuyendon' };
         if (order.traDon === true) return { text: 'Trả đơn', class: 'badge-status-tradon' };
@@ -748,7 +777,6 @@
         document.querySelectorAll('.btn-delete-order').forEach(btn => { btn.addEventListener('click', async () => { const id = btn.getAttribute('data-id'); if (confirm(`Xóa đơn #${id}?`)) { await remove(ref(db, `tiepnhandon/${currentUser.uid}/${id}`)); showToast(`Đã xóa #${id}`); } }); });
     }
 
-    // Chi tiết đơn với trạng thái chính xác
     function showDetail(order) {
         const trangThai = getTrangThai(order);
         let statusClassForDetail = '';
@@ -832,26 +860,78 @@
         const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đơn'); XLSX.writeFile(wb, filename); showToast(`Xuất ${orders.length} đơn`);
     }
 
+    // Hàm xử lý đổi mật khẩu mới thêm
+    async function handleUpdatePassword(event) {
+        event.preventDefault();
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (newPassword.length < 6) {
+            showToast('Mật khẩu phải từ 6 ký tự trở lên!', true);
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showToast('Mật khẩu xác nhận không trùng khớp!', true);
+            return;
+        }
+
+        const user = auth.currentUser;
+        if (user) {
+            try {
+                await updatePassword(user, newPassword);
+                showToast('Đổi mật khẩu thành công!');
+                document.getElementById('pwdForm').reset();
+                closePwd();
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/requires-recent-login') {
+                    showToast('Vui lòng thoát ra đăng nhập lại để thực hiện quyền này!', true);
+                } else {
+                    showToast('Lỗi đổi mật khẩu!', true);
+                }
+            }
+        } else {
+            showToast('Không tìm thấy thông tin phiên đăng nhập!', true);
+        }
+    }
+
     async function handleLogout() { await signOut(auth); window.location.href = "index.html"; }
     function populateYears() { const yearSelect = document.getElementById('filter-year'); const currentYear = new Date().getFullYear(); for (let y = 2020; y <= currentYear + 1; y++) { const option = document.createElement('option'); option.value = y; option.textContent = y; yearSelect.appendChild(option); } }
     function updateClockAndDate() { const now = new Date(); document.getElementById('live-clock').innerText = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); const fullDate = now.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' }); document.getElementById('full-date-text').innerHTML = now.toLocaleDateString('vi-VN', { weekday: 'short' }) + ', ' + fullDate; document.getElementById('current-location-date').innerHTML = fullDate; }
 
     onAuthStateChanged(auth, async (user) => { if (user) { currentUser = user; document.querySelector('#user-email-display span').innerText = user.email; populateYears(); await loadLoaiDon(); loadOrders(); } else { window.location.href = "index.html"; } });
     updateClockAndDate(); setInterval(updateClockAndDate, 60000);
+    
+    // Sự kiện nút chức năng chính
     document.getElementById('logout-btn-nav').addEventListener('click', handleLogout);
     document.getElementById('refresh-btn').addEventListener('click', () => { loadOrders(); showToast('Đã làm mới'); });
     document.getElementById('apply-filter').addEventListener('click', applyFilterAndRender);
     document.getElementById('export-all-btn').addEventListener('click', () => { if (allOrders.length) exportToExcel(allOrders, `tat_ca_don_${new Date().toISOString().slice(0,10)}.xlsx`); else showToast('Không có dữ liệu', true); });
     document.getElementById('export-filter-btn').addEventListener('click', () => { const month = document.getElementById('filter-month').value; const year = document.getElementById('filter-year').value; const loai = document.getElementById('filter-loai').value; let filtered = [...allOrders]; if (month) filtered = filtered.filter(o => getMonthFromDate(o.ngayNhanDon) === parseInt(month)); if (year) filtered = filtered.filter(o => getYearFromDate(o.ngayNhanDon) === parseInt(year)); if (loai) filtered = filtered.filter(o => o.phanLoai === loai); if (filtered.length) exportToExcel(filtered, `ket_qua_loc_${new Date().toISOString().slice(0,10)}.xlsx`); else showToast('Không có dữ liệu để xuất', true); });
+    
+    // Sự kiện đóng mở Modals
     const closeDetail = () => document.getElementById('detailModal').classList.remove('active');
     const closeEdit = () => document.getElementById('editModal').classList.remove('active');
+    const openPwd = () => document.getElementById('pwdModal').classList.add('active');
+    const closePwd = () => document.getElementById('pwdModal').classList.remove('active');
+
+    document.getElementById('change-pwd-btn').addEventListener('click', openPwd);
+    document.getElementById('closePwdBtn').addEventListener('click', closePwd);
+    document.getElementById('closePwdHeaderBtn').addEventListener('click', closePwd);
+    document.getElementById('pwdForm').addEventListener('submit', handleUpdatePassword);
+
     document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
     document.getElementById('closeDetailHeaderBtn').addEventListener('click', closeDetail);
     document.getElementById('closeEditBtn').addEventListener('click', closeEdit);
     document.getElementById('closeEditHeaderBtn').addEventListener('click', closeEdit);
     document.getElementById('editForm').addEventListener('submit', saveEditedOrder);
     document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFilterAndRender(); });
-    window.addEventListener('click', (e) => { if (e.target === document.getElementById('detailModal')) closeDetail(); if (e.target === document.getElementById('editModal')) closeEdit(); });
+    
+    window.addEventListener('click', (e) => { 
+        if (e.target === document.getElementById('detailModal')) closeDetail(); 
+        if (e.target === document.getElementById('editModal')) closeEdit(); 
+        if (e.target === document.getElementById('pwdModal')) closePwd(); 
+    });
 </script>
 </body>
 </html>
