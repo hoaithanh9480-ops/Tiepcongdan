@@ -856,8 +856,42 @@
     }
 
     function exportToExcel(orders, filename) {
-        const data = orders.map(o => ({ 'Mã đơn': o.id, 'Ngày nhận': o.ngayNhanDon || '', 'Họ tên': o.hoTen || '', 'CCCD': o.cccd || '', 'Địa chỉ': o.diaChi || '', 'Phân loại': o.phanLoai || '', 'Nội dung': o.noiDung || '', 'Cơ quan': o.coQuan || '', 'Trả lời': o.traLoi || '', 'Thụ lý': o.thuLy ? 'Có' : 'Không', 'Trả đơn': o.traDon ? 'Có' : 'Không', 'Chuyển đơn': o.chuyenDon ? 'Có' : 'Không', 'Ghi chú': o.ghiChu || '' }));
-        const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đơn'); XLSX.writeFile(wb, filename); showToast(`Xuất ${orders.length} đơn`);
+        const data = orders.map(o => {
+            // 1. Xử lý Thụ lý, Trả đơn, Chuyển đơn (Lấy trạng thái Có kèm nội dung văn bản nếu có)
+            const thuLyStatus = o.thuLy ? `Có${o.thuLyText ? ' (' + o.thuLyText + ')' : ''}` : 'Không';
+            const traDonStatus = o.traDon ? `Có${o.traDonText ? ' (' + o.traDonText + ')' : ''}` : 'Không';
+            const chuyenDonStatus = o.chuyenDon ? `Có${o.chuyenDonText ? ' (' + o.chuyenDonText + ')' : ''}` : 'Không';
+
+            // 2. Xử lý logic phần Trả lời: Nếu trực tiếp -> Không, nếu Văn bản -> có trả lời cụ thể
+            let traLoiStatus = 'Không';
+            if (o.traLoi && o.traLoi.trim().toLowerCase() === 'văn bản') {
+                traLoiStatus = 'Có';
+            } else if (o.traLoi && o.traLoi.trim().toLowerCase() !== 'trực tiếp') {
+                // Trường hợp ô trả lời chứa luôn nội dung text trả lời khác chữ "Trực tiếp"
+                traLoiStatus = o.traLoi;
+            }
+
+            return { 
+                'Mã đơn': o.id, 
+                'Ngày nhận': o.ngayNhanDon || '', 
+                'Họ tên': o.hoTen || '', 
+                'CCCD': o.cccd || '', 
+                'Địa chỉ': o.diaChi || '', 
+                'Phân loại': o.phanLoai || '', 
+                'Nội dung': o.noiDung || '', 
+                'Cơ quan': o.coQuan || '', 
+                'Trả lời': traLoiStatus, 
+                'Thụ lý': thuLyStatus, 
+                'Trả đơn': traDonStatus, 
+                'Chuyển đơn': chuyenDonStatus, 
+                'Ghi chú': o.ghiChu || '' 
+            };
+        });
+        const ws = XLSX.utils.json_to_sheet(data); 
+        const wb = XLSX.utils.book_new(); 
+        XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đơn'); 
+        XLSX.writeFile(wb, filename); 
+        showToast(`Xuất ${orders.length} đơn`);
     }
 
     // Hàm xử lý đổi mật khẩu mới thêm
