@@ -273,14 +273,19 @@
             border: none;
             cursor: pointer;
             font-size: 0.75rem;
-            padding: 4px 8px;
+            padding: 4px 6px;
             border-radius: 16px;
             transition: 0.2s;
+            margin: 0 2px;
         }
 
         .btn-view { background: #e0f2fe; color: #0369a1; }
+        .btn-edit { background: #fef9c3; color: #b45309; }
         .btn-delete-order { background: #fee2e2; color: #dc2626; }
 
+        .btn-view:hover, .btn-edit:hover, .btn-delete-order:hover { transform: scale(1.02); opacity: 0.85; }
+
+        /* Modal styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -305,44 +310,64 @@
 
         .modal-card {
             background: white;
-            max-width: 550px;
+            max-width: 650px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
             border-radius: 24px;
             padding: 20px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
         }
 
         .modal-card h3 {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             color: #0f172a;
+            border-left: 4px solid #ff9800;
+            padding-left: 12px;
         }
 
-        .detail-row {
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 8px;
-            font-size: 0.75rem;
+        .edit-form-row {
+            margin-bottom: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 5px;
         }
 
-        .detail-label {
-            font-weight: 700;
-            color: #475569;
-            min-width: 120px;
-            display: inline-block;
+        .edit-form-row label {
+            width: 130px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            color: #334155;
+            padding-top: 6px;
+        }
+
+        .edit-form-row input, .edit-form-row select, .edit-form-row textarea {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            font-family: inherit;
+            font-size: 0.7rem;
+            background: #fff;
+        }
+
+        .edit-form-row textarea {
+            min-height: 60px;
+            resize: vertical;
         }
 
         .modal-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-end;
         }
 
         .modal-actions button {
-            flex: 1;
-            padding: 8px;
+            padding: 8px 18px;
             border-radius: 30px;
             border: none;
             font-weight: 500;
@@ -350,6 +375,7 @@
             cursor: pointer;
         }
 
+        .btn-save { background: #10b981; color: white; }
         .btn-cancel { background: #e2e8f0; color: #1e293b; }
 
         .toast-msg {
@@ -371,6 +397,8 @@
             .filter-group select, .filter-group input { min-width: 80px; }
             .btn-action { padding: 4px 10px; font-size: 0.7rem; }
             .order-table th, .order-table td { padding: 6px 5px; }
+            .edit-form-row { flex-direction: column; }
+            .edit-form-row label { width: 100%; margin-bottom: 2px; }
         }
     </style>
 </head>
@@ -434,8 +462,7 @@
         <div class="table-wrapper">
             <table class="order-table">
                 <thead>
-                    <tr>
-                        <th>Mã</th><th>Người khiếu nại</th><th>Phân loại</th>
+                    <tr><th>Mã</th><th>Người khiếu nại</th><th>Phân loại</th>
                         <th>Nội dung</th><th>Ngày nhận</th><th>Trạng thái</th><th>Thao tác</th>
                     </tr>
                 </thead>
@@ -447,6 +474,7 @@
     </div>
 </div>
 
+<!-- Modal xem chi tiết -->
 <div id="detailModal" class="modal-overlay">
     <div class="modal-card">
         <h3><i class="fas fa-file-alt"></i> CHI TIẾT ĐƠN</h3>
@@ -457,12 +485,86 @@
     </div>
 </div>
 
+<!-- Modal chỉnh sửa đơn -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3><i class="fas fa-pen-alt"></i> CHỈNH SỬA ĐƠN</h3>
+        <form id="editForm">
+            <input type="hidden" id="edit-order-id">
+            <div class="edit-form-row">
+                <label>Ngày nhận:</label>
+                <input type="text" id="edit-ngayNhanDon" placeholder="DD/MM/YYYY">
+            </div>
+            <div class="edit-form-row">
+                <label>Họ tên:</label>
+                <input type="text" id="edit-hoTen">
+            </div>
+            <div class="edit-form-row">
+                <label>CCCD:</label>
+                <input type="text" id="edit-cccd">
+            </div>
+            <div class="edit-form-row">
+                <label>Địa chỉ:</label>
+                <input type="text" id="edit-diaChi">
+            </div>
+            <div class="edit-form-row">
+                <label>Phân loại:</label>
+                <select id="edit-phanLoai"></select>
+            </div>
+            <div class="edit-form-row">
+                <label>Nội dung:</label>
+                <textarea id="edit-noiDung" rows="3"></textarea>
+            </div>
+            <div class="edit-form-row">
+                <label>Cơ quan:</label>
+                <input type="text" id="edit-coQuan">
+            </div>
+            <div class="edit-form-row">
+                <label>Trả lời:</label>
+                <input type="text" id="edit-traLoi" placeholder="Nội dung trả lời">
+            </div>
+            <div class="edit-form-row">
+                <label>Thụ lý:</label>
+                <select id="edit-thuLy">
+                    <option value="false">Không</option>
+                    <option value="true">Có</option>
+                </select>
+                <input type="text" id="edit-thuLyText" placeholder="Ghi chú thụ lý" style="flex:1.5;">
+            </div>
+            <div class="edit-form-row">
+                <label>Trả đơn:</label>
+                <select id="edit-traDon">
+                    <option value="false">Không</option>
+                    <option value="true">Có</option>
+                </select>
+                <input type="text" id="edit-traDonText" placeholder="Lý do trả đơn" style="flex:1.5;">
+            </div>
+            <div class="edit-form-row">
+                <label>Chuyển đơn:</label>
+                <select id="edit-chuyenDon">
+                    <option value="false">Không</option>
+                    <option value="true">Có</option>
+                </select>
+                <input type="text" id="edit-chuyenDonText" placeholder="Chuyển đến đơn vị" style="flex:1.5;">
+            </div>
+            <div class="edit-form-row">
+                <label>Ghi chú:</label>
+                <textarea id="edit-ghiChu" rows="2"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" id="closeEditBtn">Hủy</button>
+                <button type="submit" class="btn-save"><i class="fas fa-save"></i> Lưu cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="toastMsg" class="toast-msg"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDTOD66P7I9d9Nc-SeRySoCskl5EEquR-w",
@@ -514,6 +616,16 @@
             option.value = loai;
             option.textContent = loai;
             filterSelect.appendChild(option);
+        });
+
+        // Cập nhật dropdown cho edit form
+        const editSelect = document.getElementById('edit-phanLoai');
+        editSelect.innerHTML = '';
+        loaiDonList.forEach(loai => {
+            const opt = document.createElement('option');
+            opt.value = loai;
+            opt.textContent = loai;
+            editSelect.appendChild(opt);
         });
     }
 
@@ -593,12 +705,14 @@
                 <td>${trangThai}</td>
                 <td class="action-icons">
                     <button class="btn-view" data-id="${order.id}"><i class="fas fa-eye"></i></button>
+                    <button class="btn-edit" data-id="${order.id}"><i class="fas fa-edit"></i></button>
                     <button class="btn-delete-order" data-id="${order.id}"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>`;
         });
         tbody.innerHTML = html;
         
+        // Gắn sự kiện cho nút xem
         document.querySelectorAll('.btn-view').forEach(btn => {
             btn.addEventListener('click', () => {
                 const order = allOrders.find(o => o.id === btn.getAttribute('data-id'));
@@ -606,6 +720,15 @@
             });
         });
         
+        // Gắn sự kiện cho nút sửa
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const order = allOrders.find(o => o.id === btn.getAttribute('data-id'));
+                if (order) openEditModal(order);
+            });
+        });
+        
+        // Gắn sự kiện xóa
         document.querySelectorAll('.btn-delete-order').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
@@ -615,6 +738,77 @@
                 }
             });
         });
+    }
+
+    // Mở modal chỉnh sửa và điền dữ liệu
+    function openEditModal(order) {
+        document.getElementById('edit-order-id').value = order.id;
+        document.getElementById('edit-ngayNhanDon').value = order.ngayNhanDon || '';
+        document.getElementById('edit-hoTen').value = order.hoTen || '';
+        document.getElementById('edit-cccd').value = order.cccd || '';
+        document.getElementById('edit-diaChi').value = order.diaChi || '';
+        document.getElementById('edit-phanLoai').value = order.phanLoai || '';
+        document.getElementById('edit-noiDung').value = order.noiDung || '';
+        document.getElementById('edit-coQuan').value = order.coQuan || '';
+        document.getElementById('edit-traLoi').value = order.traLoi || '';
+        document.getElementById('edit-traLoiText')?.value ? console.log('skip') : null;
+        // Mở rộng một số field nếu chưa có trên form (chuẩn bị)
+        const traLoiTextInput = document.createElement('input');
+        if (!document.getElementById('edit-traLoiText')) {
+            // Thêm input cho trả lời text nếu cần - nhưng trong form đã có sẵn rồi
+        }
+        document.getElementById('edit-traLoi').value = order.traLoi || '';
+        // các field text bổ sung
+        let thuLySelect = document.getElementById('edit-thuLy');
+        thuLySelect.value = order.thuLy === true ? 'true' : 'false';
+        document.getElementById('edit-thuLyText').value = order.thuLyText || '';
+        
+        let traDonSelect = document.getElementById('edit-traDon');
+        traDonSelect.value = order.traDon === true ? 'true' : 'false';
+        document.getElementById('edit-traDonText').value = order.traDonText || '';
+        
+        let chuyenDonSelect = document.getElementById('edit-chuyenDon');
+        chuyenDonSelect.value = order.chuyenDon === true ? 'true' : 'false';
+        document.getElementById('edit-chuyenDonText').value = order.chuyenDonText || '';
+        
+        document.getElementById('edit-ghiChu').value = order.ghiChu || '';
+        
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    async function saveEditedOrder(event) {
+        event.preventDefault();
+        const orderId = document.getElementById('edit-order-id').value;
+        if (!orderId || !currentUser) return;
+        
+        const updatedData = {
+            ngayNhanDon: document.getElementById('edit-ngayNhanDon').value,
+            hoTen: document.getElementById('edit-hoTen').value,
+            cccd: document.getElementById('edit-cccd').value,
+            diaChi: document.getElementById('edit-diaChi').value,
+            phanLoai: document.getElementById('edit-phanLoai').value,
+            noiDung: document.getElementById('edit-noiDung').value,
+            coQuan: document.getElementById('edit-coQuan').value,
+            traLoi: document.getElementById('edit-traLoi').value,
+            thuLy: document.getElementById('edit-thuLy').value === 'true',
+            thuLyText: document.getElementById('edit-thuLyText').value,
+            traDon: document.getElementById('edit-traDon').value === 'true',
+            traDonText: document.getElementById('edit-traDonText').value,
+            chuyenDon: document.getElementById('edit-chuyenDon').value === 'true',
+            chuyenDonText: document.getElementById('edit-chuyenDonText').value,
+            ghiChu: document.getElementById('edit-ghiChu').value
+        };
+        
+        // Giữ lại các trường có thể không có trong form cũ như namNhanDon? nhưng không ảnh hưởng
+        try {
+            await update(ref(db, `tiepnhandon/${currentUser.uid}/${orderId}`), updatedData);
+            showToast(`Đã cập nhật đơn #${orderId}`);
+            document.getElementById('editModal').classList.remove('active');
+            // loadOrders sẽ tự động cập nhật vì onValue realtime
+        } catch (error) {
+            console.error(error);
+            showToast('Lỗi cập nhật!', true);
+        }
     }
 
     function exportToExcel(orders, filename) {
@@ -712,8 +906,15 @@
     document.getElementById('closeDetailBtn').addEventListener('click', () => {
         document.getElementById('detailModal').classList.remove('active');
     });
+    document.getElementById('closeEditBtn').addEventListener('click', () => {
+        document.getElementById('editModal').classList.remove('active');
+    });
+    document.getElementById('editForm').addEventListener('submit', saveEditedOrder);
     document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFilterAndRender(); });
-    window.addEventListener('click', (e) => { if (e.target === document.getElementById('detailModal')) document.getElementById('detailModal').classList.remove('active'); });
+    window.addEventListener('click', (e) => { 
+        if (e.target === document.getElementById('detailModal')) document.getElementById('detailModal').classList.remove('active');
+        if (e.target === document.getElementById('editModal')) document.getElementById('editModal').classList.remove('active');
+    });
 </script>
 </body>
 </html>
